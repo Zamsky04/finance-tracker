@@ -1,69 +1,94 @@
+// src/lib/utils.ts
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import {
-  endOfDay,
+  addDays,
   endOfMonth,
-  endOfWeek,
   endOfYear,
   format,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
+  parseISO,
   startOfYear,
 } from 'date-fns';
-import type { FilterMode } from '@/components/filters-bar';
+import type { ReportFilters } from '@/components/filters-bar';
 
-export function resolveDateRange(params: {
-  mode: FilterMode;
-  baseDate: string;
-  from?: string;
-  to?: string;
-}) {
-  if (params.mode === 'custom') {
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+function toYmd(date: Date) {
+  return format(date, 'yyyy-MM-dd');
+}
+
+const monthNames = [
+  'Januari',
+  'Februari',
+  'Maret',
+  'April',
+  'Mei',
+  'Juni',
+  'Juli',
+  'Agustus',
+  'September',
+  'Oktober',
+  'November',
+  'Desember',
+];
+
+export function resolveDateRange(filters: ReportFilters) {
+  if (filters.mode === 'day') {
+    const date = filters.baseDate ? parseISO(filters.baseDate) : new Date();
+    const ymd = toYmd(date);
+
     return {
-      from: params.from
-        ? startOfDay(new Date(params.from)).toISOString()
-        : undefined,
-      to: params.to
-        ? endOfDay(new Date(params.to)).toISOString()
-        : undefined,
-      label:
-        params.from && params.to
-          ? `${params.from} s/d ${params.to}`
-          : 'Custom',
+      from: ymd,
+      to: ymd,
+      label: format(date, 'dd MMM yyyy'),
     };
   }
 
-  const base = params.baseDate ? new Date(params.baseDate) : new Date();
+  if (filters.mode === 'week') {
+    const start = filters.baseDate ? parseISO(filters.baseDate) : new Date();
+    const end = addDays(start, 6);
 
-  switch (params.mode) {
-    case 'day':
-      return {
-        from: startOfDay(base).toISOString(),
-        to: endOfDay(base).toISOString(),
-        label: format(base, 'yyyy-MM-dd'),
-      };
-    case 'week':
-      return {
-        from: startOfWeek(base, { weekStartsOn: 1 }).toISOString(),
-        to: endOfWeek(base, { weekStartsOn: 1 }).toISOString(),
-        label: 'Minggu ini',
-      };
-    case 'month':
-      return {
-        from: startOfMonth(base).toISOString(),
-        to: endOfMonth(base).toISOString(),
-        label: 'Bulan ini',
-      };
-    case 'year':
-      return {
-        from: startOfYear(base).toISOString(),
-        to: endOfYear(base).toISOString(),
-        label: 'Tahun ini',
-      };
-    default:
-      return {
-        from: startOfDay(base).toISOString(),
-        to: endOfDay(base).toISOString(),
-        label: format(base, 'yyyy-MM-dd'),
-      };
+    return {
+      from: toYmd(start),
+      to: toYmd(end),
+      label: `${format(start, 'dd MMM yyyy')} - ${format(end, 'dd MMM yyyy')}`,
+    };
   }
+
+  if (filters.mode === 'month') {
+    const year = Number(filters.year ?? new Date().getFullYear());
+    const month = Number(filters.month ?? new Date().getMonth() + 1);
+
+    const start = new Date(year, month - 1, 1);
+    const end = endOfMonth(start);
+
+    return {
+      from: toYmd(start),
+      to: toYmd(end),
+      label: `${monthNames[month - 1]} ${year}`,
+    };
+  }
+
+  if (filters.mode === 'year') {
+    const year = Number(filters.year ?? new Date().getFullYear());
+    const start = startOfYear(new Date(year, 0, 1));
+    const end = endOfYear(start);
+
+    return {
+      from: toYmd(start),
+      to: toYmd(end),
+      label: `Tahun ${year}`,
+    };
+  }
+
+  return {
+    from: filters.from,
+    to: filters.to,
+    label:
+      filters.from && filters.to
+        ? `${filters.from} - ${filters.to}`
+        : 'Custom range',
+  };
 }

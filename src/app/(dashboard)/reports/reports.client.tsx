@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ExpensePieChart } from '@/components/expense-pie-chart';
 import { ExpenseBarChart } from '@/components/expense-bar-chart';
-import { FiltersBar, type FilterMode } from '@/components/filters-bar';
+import { FiltersBar, type ReportFilters } from '@/components/filters-bar';
 import { KpiCards } from '@/components/kpi-cards';
 import { resolveDateRange } from '@/lib/utils';
 
@@ -25,13 +25,6 @@ type Props = {
   initialSummary: Summary;
 };
 
-type CurrentFilter = {
-  mode: FilterMode;
-  baseDate: string;
-  from?: string;
-  to?: string;
-};
-
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -45,7 +38,7 @@ export function ReportsClient({
   const [loading, setLoading] = useState(false);
   const [filterLabel, setFilterLabel] = useState('Hari ini');
 
-  const [currentFilter, setCurrentFilter] = useState<CurrentFilter>({
+  const [currentFilter, setCurrentFilter] = useState<ReportFilters>({
     mode: 'day',
     baseDate: today(),
   });
@@ -80,7 +73,7 @@ export function ReportsClient({
     }
   };
 
-  const handleApplyFilter = async (filters: CurrentFilter) => {
+  const handleApplyFilter = async (filters: ReportFilters) => {
     setCurrentFilter(filters);
     await reloadAll(filters);
   };

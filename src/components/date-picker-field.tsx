@@ -4,7 +4,6 @@ import * as React from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import type { DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,12 +15,16 @@ import {
 import { cn } from '@/lib/utils';
 
 type Props = {
-  from?: Date;
-  to?: Date;
-  onChange: (range: DateRange | undefined) => void;
+  value?: Date;
+  onChange: (date: Date | undefined) => void;
+  placeholder?: string;
 };
 
-export function DateRangePicker({ from, to, onChange }: Props) {
+export function DatePickerField({
+  value,
+  onChange,
+  placeholder = 'Pilih tanggal',
+}: Props) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -30,31 +33,18 @@ export function DateRangePicker({ from, to, onChange }: Props) {
           variant="outline"
           className={cn(
             'h-12 w-full justify-start rounded-2xl border-slate-200 bg-white px-4 text-left font-normal text-black hover:bg-slate-50',
-            !from && 'text-slate-500'
+            !value && 'text-slate-500'
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {from ? (
-            to ? (
-              <>
-                {format(from, 'dd MMM yyyy', { locale: id })} -{' '}
-                {format(to, 'dd MMM yyyy', { locale: id })}
-              </>
-            ) : (
-              format(from, 'dd MMM yyyy', { locale: id })
-            )
-          ) : (
-            'Pilih rentang tanggal'
-          )}
+          {value ? format(value, 'dd MMMM yyyy', { locale: id }) : placeholder}
         </Button>
       </PopoverTrigger>
-
       <PopoverContent className="w-auto rounded-2xl p-0" align="start">
         <Calendar
-          mode="range"
-          selected={{ from, to }}
+          mode="single"
+          selected={value}
           onSelect={onChange}
-          numberOfMonths={2}
           initialFocus
         />
       </PopoverContent>
