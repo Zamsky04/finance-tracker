@@ -1,75 +1,17 @@
+// src/app/(dashboard)/dashboard/page.tsx
 import { getCategories } from '@/db/queries';
+import {
+  getSummaryData,
+  getExpenseBreakdownData,
+  getTransactionsData,
+} from '@/db/dashboard-queries';
 import { DashboardClient } from './page.client';
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
-async function getSummary() {
-  try {
-    if (!baseUrl) {
-      return {
-        total_income: 0,
-        total_expense: 0,
-        balance: 0,
-      };
-    }
-
-    const res = await fetch(`${baseUrl}/api/reports/summary`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      return {
-        total_income: 0,
-        total_expense: 0,
-        balance: 0,
-      };
-    }
-
-    return res.json();
-  } catch {
-    return {
-      total_income: 0,
-      total_expense: 0,
-      balance: 0,
-    };
-  }
-}
-
-async function getExpenseBreakdown() {
-  try {
-    if (!baseUrl) return [];
-
-    const res = await fetch(`${baseUrl}/api/reports/expense-breakdown`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
-async function getTransactions() {
-  try {
-    if (!baseUrl) return [];
-
-    const res = await fetch(`${baseUrl}/api/transactions`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
 
 export default async function DashboardPage() {
   const [summary, expenseData, transactions, categories] = await Promise.all([
-    getSummary(),
-    getExpenseBreakdown(),
-    getTransactions(),
+    getSummaryData(),
+    getExpenseBreakdownData(),
+    getTransactionsData(),
     getCategories(),
   ]);
 

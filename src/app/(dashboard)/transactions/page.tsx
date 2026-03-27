@@ -1,27 +1,12 @@
+// src/app/(dashboard)/transactions/page.tsx
 import { getCategories } from '@/db/queries';
 import { TransactionForm } from '@/components/transaction-form';
 import { TransactionList } from '@/components/transaction-list';
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
-async function getTransactions() {
-  try {
-    if (!baseUrl) return [];
-
-    const res = await fetch(`${baseUrl}/api/transactions`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
+import { getTransactionsData } from '@/db/dashboard-queries';
 
 export default async function TransactionsPage() {
   const [transactions, categories] = await Promise.all([
-    getTransactions(),
+    getTransactionsData(),
     getCategories(),
   ]);
 

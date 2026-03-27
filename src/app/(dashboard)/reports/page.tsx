@@ -1,60 +1,16 @@
+// src/app/(dashboard)/reports/page.tsx
 import { ExpensePieChart } from '@/components/expense-pie-chart';
 import { ExpenseBarChart } from '@/components/expense-bar-chart';
 import { KpiCards } from '@/components/kpi-cards';
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
-async function getSummary() {
-  try {
-    if (!baseUrl) {
-      return {
-        total_income: 0,
-        total_expense: 0,
-        balance: 0,
-      };
-    }
-
-    const res = await fetch(`${baseUrl}/api/reports/summary`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      return {
-        total_income: 0,
-        total_expense: 0,
-        balance: 0,
-      };
-    }
-
-    return res.json();
-  } catch {
-    return {
-      total_income: 0,
-      total_expense: 0,
-      balance: 0,
-    };
-  }
-}
-
-async function getExpenseBreakdown() {
-  try {
-    if (!baseUrl) return [];
-
-    const res = await fetch(`${baseUrl}/api/reports/expense-breakdown`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
+import {
+  getSummaryData,
+  getExpenseBreakdownData,
+} from '@/db/dashboard-queries';
 
 export default async function ReportsPage() {
   const [summary, expenseData] = await Promise.all([
-    getSummary(),
-    getExpenseBreakdown(),
+    getSummaryData(),
+    getExpenseBreakdownData(),
   ]);
 
   return (
