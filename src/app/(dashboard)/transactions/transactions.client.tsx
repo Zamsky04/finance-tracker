@@ -1,28 +1,28 @@
 'use client';
- 
+
 import { useState } from 'react';
 import { TransactionForm } from '@/components/transaction-form';
 import { TransactionDetailSheet } from '@/components/transaction-detail-sheet';
 import { TransactionList, type TransactionItem } from '@/components/transaction-list';
 import { Loader2 } from 'lucide-react';
- 
+
 type Category = {
   id: string;
   name: string;
   type: 'income' | 'expense';
   color?: string | null;
 };
- 
+
 type Props = {
   initialTransactions: TransactionItem[];
   categories: Category[];
 };
- 
+
 export function TransactionsClient({ initialTransactions, categories }: Props) {
   const [transactions, setTransactions] = useState<TransactionItem[]>(initialTransactions);
   const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [loading, setLoading] = useState(false);
- 
+
   const reloadTransactions = async () => {
     setLoading(true);
     try {
@@ -37,12 +37,10 @@ export function TransactionsClient({ initialTransactions, categories }: Props) {
       setLoading(false);
     }
   };
- 
+
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
- 
-        {/* Hero */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-700 p-5 text-white shadow-[0_8px_40px_-8px_rgba(15,23,42,0.4)] sm:p-6">
           <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5" />
           <div className="pointer-events-none absolute -bottom-12 right-14 h-52 w-52 rounded-full bg-white/5" />
@@ -56,8 +54,7 @@ export function TransactionsClient({ initialTransactions, categories }: Props) {
             Tambahkan dan lihat seluruh transaksi pemasukan maupun pengeluaran.
           </p>
         </section>
- 
-        {/* Count bar */}
+
         <div className="flex items-center gap-2.5 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
           {loading ? (
             <>
@@ -73,12 +70,12 @@ export function TransactionsClient({ initialTransactions, categories }: Props) {
             </>
           )}
         </div>
- 
+
         <section className="grid gap-4 xl:grid-cols-[1fr_1.05fr] xl:gap-6">
           <TransactionForm categories={categories} onCreated={reloadTransactions} />
           <TransactionList items={transactions} onSelect={setSelected} />
         </section>
- 
+
         <TransactionDetailSheet
           item={selected}
           onDeleted={async () => {

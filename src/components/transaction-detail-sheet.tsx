@@ -1,4 +1,3 @@
-// src/components/transaction-detail-sheet.tsx
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +10,44 @@ type Props = {
   item: TransactionItem | null;
   onDeleted?: () => void;
 };
+
+function formatPayment(
+  method?: 'bank_transfer' | 'e_wallet' | 'cash' | null,
+  provider?: string | null
+) {
+  if (!method) return '–';
+  if (method === 'cash') return 'Cash';
+
+  const providerLabelMap: Record<string, string> = {
+    bca: 'BCA',
+    bri: 'BRI',
+    mandiri: 'Mandiri',
+    bni: 'BNI',
+    seabank: 'SeaBank',
+    cimb_niaga: 'CIMB Niaga',
+    permata: 'Permata',
+    btn: 'BTN',
+    danamon: 'Danamon',
+    bsi: 'BSI',
+    gopay: 'GoPay',
+    ovo: 'OVO',
+    shopeepay: 'ShopeePay',
+    dana: 'DANA',
+    linkaja: 'LinkAja',
+  };
+
+  const providerLabel = provider ? providerLabelMap[provider] ?? provider : '';
+
+  if (method === 'bank_transfer') {
+    return providerLabel ? `Transfer Bank - ${providerLabel}` : 'Transfer Bank';
+  }
+
+  if (method === 'e_wallet') {
+    return providerLabel ? `E-Wallet - ${providerLabel}` : 'E-Wallet';
+  }
+
+  return '–';
+}
 
 export function TransactionDetailSheet({ item, onDeleted }: Props) {
   const [loading, setLoading] = useState(false);
@@ -37,11 +74,14 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_8px_40px_-8px_rgba(30,64,175,0.12)]">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/40 px-6 py-5">
         <div>
-          <h3 className="text-base font-semibold tracking-tight text-slate-900">Detail Transaksi</h3>
-          <p className="mt-0.5 text-xs text-slate-500">Foto bukti dan informasi lengkap transaksi</p>
+          <h3 className="text-base font-semibold tracking-tight text-slate-900">
+            Detail Transaksi
+          </h3>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Foto bukti dan informasi lengkap transaksi
+          </p>
         </div>
         {item && (
           <button
@@ -67,12 +107,15 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
             <CreditCard className="h-6 w-6 text-slate-400" />
           </div>
-          <p className="text-sm font-medium text-slate-500">Pilih transaksi untuk melihat detail</p>
-          <p className="text-xs text-slate-400">Klik salah satu transaksi dari daftar di sebelah kiri</p>
+          <p className="text-sm font-medium text-slate-500">
+            Pilih transaksi untuk melihat detail
+          </p>
+          <p className="text-xs text-slate-400">
+            Klik salah satu transaksi dari daftar di sebelah kiri
+          </p>
         </div>
       ) : (
         <div className="divide-y divide-slate-50">
-          {/* Image */}
           {item.imageUrl ? (
             <div className="relative h-52 overflow-hidden bg-slate-100">
               <img
@@ -89,7 +132,6 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
             </div>
           )}
 
-          {/* Info */}
           <div className="px-6 py-5">
             <div className="mb-4">
               <p className="text-lg font-semibold text-slate-900">{item.title}</p>
@@ -104,12 +146,15 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
               </span>
             </div>
 
-            <p className={`text-2xl font-bold tracking-tight ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-500'}`}>
+            <p
+              className={`text-2xl font-bold tracking-tight ${
+                item.type === 'income' ? 'text-emerald-600' : 'text-rose-500'
+              }`}
+            >
               {formatIDR(item.amount)}
             </p>
           </div>
 
-          {/* Meta rows */}
           <div className="grid gap-0 divide-y divide-slate-50 px-6">
             {[
               {
@@ -117,6 +162,12 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
                 label: 'Kategori',
                 value: item.categoryName || 'Tanpa kategori',
                 muted: !item.categoryName,
+              },
+              {
+                Icon: CreditCard,
+                label: 'Pembayaran',
+                value: formatPayment(item.paymentMethod, item.paymentProvider),
+                muted: !item.paymentMethod,
               },
               {
                 Icon: Clock,
@@ -136,8 +187,14 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
                   <Icon className="h-3.5 w-3.5 text-slate-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">{label}</p>
-                  <p className={`mt-0.5 text-sm font-medium ${muted ? 'text-slate-400' : 'text-slate-800'}`}>
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                    {label}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-sm font-medium ${
+                      muted ? 'text-slate-400' : 'text-slate-800'
+                    }`}
+                  >
                     {value}
                   </p>
                 </div>

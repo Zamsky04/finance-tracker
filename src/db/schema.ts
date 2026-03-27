@@ -35,6 +35,10 @@ export const transactions = pgTable(
     transactionAt: timestamp('transaction_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
+    paymentMethod: varchar('payment_method', { length: 30 }).$type<
+      'bank_transfer' | 'e_wallet' | 'cash' | null
+    >(),
+    paymentProvider: varchar('payment_provider', { length: 50 }),
     imageUrl: text('image_url'),
     imagePath: text('image_path'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

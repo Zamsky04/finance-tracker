@@ -1,4 +1,3 @@
-// src/app/api/transactions/route.ts
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, transactions } from '@/db/schema';
@@ -32,6 +31,8 @@ export async function GET(req: Request) {
       amount: transactions.amount,
       note: transactions.note,
       transactionAt: transactions.transactionAt,
+      paymentMethod: transactions.paymentMethod,
+      paymentProvider: transactions.paymentProvider,
       imageUrl: transactions.imageUrl,
       imagePath: transactions.imagePath,
       categoryId: transactions.categoryId,
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(transactions.transactionAt));
+    .orderBy(desc(transactions.transactionAt), desc(transactions.id));
 
   return Response.json(rows);
 }
@@ -63,6 +64,10 @@ export async function POST(req: Request) {
       note: parsed.data.note || null,
       categoryId: parsed.data.categoryId || null,
       transactionAt: new Date(parsed.data.transactionAt),
+      paymentMethod: parsed.data.paymentMethod || null,
+      paymentProvider: parsed.data.paymentMethod === 'cash'
+        ? null
+        : parsed.data.paymentProvider || null,
       imageUrl: parsed.data.imageUrl || null,
       imagePath: parsed.data.imagePath || null,
     })

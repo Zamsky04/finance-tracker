@@ -1,4 +1,3 @@
-// src/components/transaction-form.tsx
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/select';
 
 type TxType = 'income' | 'expense';
+type PaymentMethod = 'bank_transfer' | 'e_wallet' | 'cash';
 
 type Category = {
   id: string;
@@ -39,6 +39,27 @@ function formatRupiahInput(value: string) {
   return new Intl.NumberFormat('id-ID').format(Number(digits));
 }
 
+const bankOptions = [
+  { value: 'bca', label: 'BCA' },
+  { value: 'bri', label: 'BRI' },
+  { value: 'mandiri', label: 'Mandiri' },
+  { value: 'bni', label: 'BNI' },
+  { value: 'seabank', label: 'SeaBank' },
+  { value: 'cimb_niaga', label: 'CIMB Niaga' },
+  { value: 'permata', label: 'Permata' },
+  { value: 'btn', label: 'BTN' },
+  { value: 'danamon', label: 'Danamon' },
+  { value: 'bsi', label: 'BSI' },
+];
+
+const eWalletOptions = [
+  { value: 'gopay', label: 'GoPay' },
+  { value: 'ovo', label: 'OVO' },
+  { value: 'shopeepay', label: 'ShopeePay' },
+  { value: 'dana', label: 'DANA' },
+  { value: 'linkaja', label: 'LinkAja' },
+];
+
 export function TransactionForm({
   categories = [],
   onCreated,
@@ -52,6 +73,8 @@ export function TransactionForm({
   const [note, setNote] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [transactionAt, setTransactionAt] = useState(getNowLocalISOString());
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
+  const [paymentProvider, setPaymentProvider] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -71,10 +94,21 @@ export function TransactionForm({
     [categories, type]
   );
 
+  const paymentProviderOptions = useMemo(() => {
+    if (paymentMethod === 'bank_transfer') return bankOptions;
+    if (paymentMethod === 'e_wallet') return eWalletOptions;
+    return [];
+  }, [paymentMethod]);
+
   const handleTypeChange = (value: TxType) => {
     setType(value);
     setCategoryId('');
     setTransactionAt(getNowLocalISOString());
+  };
+
+  const handlePaymentMethodChange = (value: PaymentMethod) => {
+    setPaymentMethod(value);
+    setPaymentProvider('');
   };
 
   const handleAmountChange = (value: string) => {
@@ -107,7 +141,7 @@ export function TransactionForm({
         description: 'Bukti transaksi siap disimpan.',
       });
     } catch (error) {
-      toast.error('Upload gagal', {
+      toast.error('Upload gambar gagal', {
         id: toastId,
         description:
           error instanceof Error
@@ -127,6 +161,8 @@ export function TransactionForm({
     setNote('');
     setCategoryId('');
     setTransactionAt(getNowLocalISOString());
+    setPaymentMethod('');
+    setPaymentProvider('');
     setImageUrl(null);
     setImagePath(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -142,6 +178,19 @@ export function TransactionForm({
 
     if (!amountValue || amountValue <= 0) {
       toast.error('Nominal harus lebih dari 0');
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast.error('Metode pembayaran wajib dipilih');
+      return;
+    }
+
+    if (
+      (paymentMethod === 'bank_transfer' || paymentMethod === 'e_wallet') &&
+      !paymentProvider
+    ) {
+      toast.error('Provider pembayaran wajib dipilih');
       return;
     }
 
@@ -164,6 +213,8 @@ export function TransactionForm({
           note: note.trim(),
           categoryId: categoryId || null,
           transactionAt: parsedDate.toISOString(),
+          paymentMethod,
+          paymentProvider: paymentMethod === 'cash' ? null : paymentProvider || null,
           imageUrl,
           imagePath,
         }),
@@ -173,6 +224,7 @@ export function TransactionForm({
       if (!res.ok) {
         throw new Error(
           data?.error?.formErrors?.[0] ||
+            data?.error?.fieldErrors?.paymentProvider?.[0] ||
             data?.error ||
             'Gagal menyimpan transaksi'
         );
@@ -277,6 +329,57 @@ export function TransactionForm({
               ) : (
                 <div className="px-3 py-2 text-sm text-slate-500">
                   Belum ada kategori
+                </div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            value={paymentMethod}
+            onValueChange={(value) => handlePaymentMethodChange(value as PaymentMethod)}
+          >
+            <SelectTrigger className="h-12 w-full rounded-2xl border border-slate-100 bg-slate-50/80 px-4 text-sm text-slate-900 shadow-none focus:ring-2 focus:ring-blue-100">
+              <SelectValue placeholder="Pilih metode pembayaran" />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="bank_transfer">Transfer Bank</SelectItem>
+              <SelectItem value="e_wallet">E-Wallet</SelectItem>
+              <SelectItem value="cash">Cash</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={paymentProvider}
+            onValueChange={setPaymentProvider}
+            disabled={!paymentMethod || paymentMethod === 'cash'}
+          >
+            <SelectTrigger className="h-12 w-full rounded-2xl border border-slate-100 bg-slate-50/80 px-4 text-sm text-slate-900 shadow-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60">
+              <SelectValue
+                placeholder={
+                  !paymentMethod
+                    ? 'Pilih metode dulu'
+                    : paymentMethod === 'cash'
+                    ? 'Cash tidak butuh provider'
+                    : 'Pilih provider'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              {paymentMethod === 'cash' ? (
+                <div className="px-3 py-2 text-sm text-slate-500">
+                  Cash tidak memiliki provider
+                </div>
+              ) : paymentProviderOptions.length > 0 ? (
+                paymentProviderOptions.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-sm text-slate-500">
+                  Belum ada pilihan
                 </div>
               )}
             </SelectContent>

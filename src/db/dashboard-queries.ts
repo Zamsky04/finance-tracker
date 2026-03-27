@@ -1,9 +1,9 @@
-// src/db/dashboard-queries.ts
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, transactions } from '@/db/schema';
 
 export type TxType = 'income' | 'expense';
+export type PaymentMethod = 'bank_transfer' | 'e_wallet' | 'cash';
 
 export type SummaryData = {
   total_income: number;
@@ -25,6 +25,8 @@ export type TransactionData = {
   amount: number;
   note: string | null;
   transactionAt: Date;
+  paymentMethod: PaymentMethod | null;
+  paymentProvider: string | null;
   imageUrl: string | null;
   imagePath: string | null;
   categoryId: string | null;
@@ -95,7 +97,8 @@ export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]>
   return Array.from(grouped.values())
     .map((item) => ({
       ...item,
-      percentage: grandTotal === 0 ? 0 : Number(((item.total / grandTotal) * 100).toFixed(2)),
+      percentage:
+        grandTotal === 0 ? 0 : Number(((item.total / grandTotal) * 100).toFixed(2)),
     }))
     .sort((a, b) => b.total - a.total);
 }
@@ -109,6 +112,8 @@ export async function getTransactionsData(): Promise<TransactionData[]> {
       amount: transactions.amount,
       note: transactions.note,
       transactionAt: transactions.transactionAt,
+      paymentMethod: transactions.paymentMethod,
+      paymentProvider: transactions.paymentProvider,
       imageUrl: transactions.imageUrl,
       imagePath: transactions.imagePath,
       categoryId: transactions.categoryId,
@@ -126,6 +131,8 @@ export async function getTransactionsData(): Promise<TransactionData[]> {
     amount: Number(item.amount ?? 0),
     note: item.note,
     transactionAt: item.transactionAt,
+    paymentMethod: (item.paymentMethod ?? null) as PaymentMethod | null,
+    paymentProvider: item.paymentProvider ?? null,
     imageUrl: item.imageUrl,
     imagePath: item.imagePath,
     categoryId: item.categoryId ? String(item.categoryId) : null,
