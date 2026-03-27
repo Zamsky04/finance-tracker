@@ -32,8 +32,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white">
-      <div className="mx-auto flex min-h-screen max-w-7xl gap-4 px-3 py-3 sm:gap-6 sm:px-4 sm:py-6 md:px-6">
-        <aside className="hidden w-72 shrink-0 rounded-[28px] border border-white/60 bg-white/85 p-5 shadow-2xl backdrop-blur lg:block">
+      <div className="mx-auto flex max-w-7xl items-start gap-4 px-3 py-3 sm:gap-6 sm:px-4 sm:py-6 md:px-6">
+        <aside className="sticky top-6 hidden max-h-[calc(100vh-3rem)] w-72 shrink-0 self-start overflow-y-auto rounded-[28px] border border-white/60 bg-white/90 p-5 shadow-2xl backdrop-blur lg:block">
           <div className="mb-8 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg">
               <Wallet size={22} />
