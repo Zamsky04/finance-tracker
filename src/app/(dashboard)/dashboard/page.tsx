@@ -1,42 +1,68 @@
-// src/app/(dashboard)/dashboard/page.tsx
 import { getCategories } from '@/db/queries';
 import { DashboardClient } from './page.client';
 
-async function getSummary() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/reports/summary`,
-    { cache: 'no-store' }
-  );
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  if (!res.ok) {
+async function getSummary() {
+  try {
+    if (!baseUrl) {
+      return {
+        total_income: 0,
+        total_expense: 0,
+        balance: 0,
+      };
+    }
+
+    const res = await fetch(`${baseUrl}/api/reports/summary`, {
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      return {
+        total_income: 0,
+        total_expense: 0,
+        balance: 0,
+      };
+    }
+
+    return res.json();
+  } catch {
     return {
       total_income: 0,
       total_expense: 0,
       balance: 0,
     };
   }
-
-  return res.json();
 }
 
 async function getExpenseBreakdown() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/reports/expense-breakdown`,
-    { cache: 'no-store' }
-  );
+  try {
+    if (!baseUrl) return [];
 
-  if (!res.ok) return [];
-  return res.json();
+    const res = await fetch(`${baseUrl}/api/reports/expense-breakdown`, {
+      cache: 'no-store',
+    });
+
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 async function getTransactions() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/transactions`,
-    { cache: 'no-store' }
-  );
+  try {
+    if (!baseUrl) return [];
 
-  if (!res.ok) return [];
-  return res.json();
+    const res = await fetch(`${baseUrl}/api/transactions`, {
+      cache: 'no-store',
+    });
+
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 export default async function DashboardPage() {
