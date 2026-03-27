@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getNowLocalISOString } from '@/lib/date';
@@ -34,19 +35,21 @@ export function TransactionForm({
   categories = [],
   onCreated,
 }: TransactionFormProps) {
-    const [type, setType] = useState<TxType>('expense');
-    const [title, setTitle] = useState('');
-    const [amountInput, setAmountInput] = useState('');
-    const [amountValue, setAmountValue] = useState<number>(0);
-    const [note, setNote] = useState('');
-    const [categoryId, setCategoryId] = useState('');
-    const [transactionAt, setTransactionAt] = useState(getNowLocalISOString());
-    const [autoTime, setAutoTime] = useState(true);
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [imagePath, setImagePath] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
+
+  const [type, setType] = useState<TxType>('expense');
+  const [title, setTitle] = useState('');
+  const [amountInput, setAmountInput] = useState('');
+  const [amountValue, setAmountValue] = useState<number>(0);
+  const [note, setNote] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [transactionAt, setTransactionAt] = useState(getNowLocalISOString());
+  const [autoTime, setAutoTime] = useState(true);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!autoTime) return;
@@ -74,7 +77,7 @@ export function TransactionForm({
     const digits = digitsOnly(value);
     setAmountInput(formatRupiahInput(digits));
     setAmountValue(digits ? Number(digits) : 0);
-    };
+  };
 
   const handleDateChange = (value: string) => {
     setTransactionAt(value);
@@ -145,8 +148,8 @@ export function TransactionForm({
     }
 
     if (!amountValue || amountValue <= 0) {
-        toast.error('Nominal harus lebih dari 0');
-        return;
+      toast.error('Nominal harus lebih dari 0');
+      return;
     }
 
     setSubmitting(true);
@@ -187,7 +190,9 @@ export function TransactionForm({
       }
 
       resetForm();
+
       await onCreated?.();
+      router.refresh();
 
       toast.success('Transaksi berhasil disimpan', {
         id: toastId,

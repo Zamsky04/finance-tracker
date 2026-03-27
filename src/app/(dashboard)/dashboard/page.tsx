@@ -7,6 +7,8 @@ import {
 } from '@/db/dashboard-queries';
 import { DashboardClient } from './page.client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export default async function DashboardPage() {
   const [summary, expenseData, transactions, categories] = await Promise.all([
     getSummaryData(),

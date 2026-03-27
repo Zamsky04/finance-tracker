@@ -35,7 +35,7 @@ export type TransactionData = {
 export async function getSummaryData(): Promise<SummaryData> {
   const rows = await db.select().from(transactions);
 
-  const summary = rows.reduce(
+  return rows.reduce<SummaryData>(
     (acc, item) => {
       const amount = Number(item.amount ?? 0);
 
@@ -53,44 +53,11 @@ export async function getSummaryData(): Promise<SummaryData> {
       total_income: 0,
       total_expense: 0,
       balance: 0,
-    } satisfies SummaryData
+    }
   );
-
-  return summary;
 }
 
 export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]> {
-  const rows = await db
-    .select({
-      amount: transactions.amount,
-      categoryName: categories.name,
-      categoryColor: categories.color,
-    })
-    .from(transactions)
-    .leftJoin(categories, eq(transactions.categoryId, categories.id));
-
-  const expenseRows = rows.filter((item) => item.amount != null);
-
-  const grouped = new Map<string, ExpenseBreakdownData>();
-  let grandTotal = 0;
-
-  for (const item of expenseRows) {
-    const tx = item as typeof item & { amount: string | number };
-    const amount = Number(tx.amount ?? 0);
-
-    const originalTx = rows.find(
-      (r) =>
-        r.amount === item.amount &&
-        r.categoryName === item.categoryName &&
-        r.categoryColor === item.categoryColor
-    );
-
-    if (!originalTx) continue;
-
-    // filter hanya expense
-    // karena select di atas tidak ambil type, maka lebih aman ambil ulang dari source lengkap
-  }
-
   const expenseOnly = await db
     .select({
       amount: transactions.amount,
@@ -100,6 +67,9 @@ export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]>
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
     .where(eq(transactions.type, 'expense'));
+
+  const grouped = new Map<string, ExpenseBreakdownData>();
+  let grandTotal = 0;
 
   for (const item of expenseOnly) {
     const amount = Number(item.amount ?? 0);
@@ -122,14 +92,12 @@ export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]>
     }
   }
 
-  const result = Array.from(grouped.values())
+  return Array.from(grouped.values())
     .map((item) => ({
       ...item,
       percentage: grandTotal === 0 ? 0 : Number(((item.total / grandTotal) * 100).toFixed(2)),
     }))
     .sort((a, b) => b.total - a.total);
-
-  return result;
 }
 
 export async function getTransactionsData(): Promise<TransactionData[]> {
@@ -149,7 +117,7 @@ export async function getTransactionsData(): Promise<TransactionData[]> {
     })
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
-    .orderBy(desc(transactions.transactionAt));
+    .orderBy(desc(transactions.transactionAt), desc(transactions.id));
 
   return rows.map((item) => ({
     id: String(item.id),

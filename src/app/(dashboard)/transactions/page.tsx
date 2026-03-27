@@ -4,6 +4,8 @@ import { TransactionForm } from '@/components/transaction-form';
 import { TransactionList } from '@/components/transaction-list';
 import { getTransactionsData } from '@/db/dashboard-queries';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export default async function TransactionsPage() {
   const [transactions, categories] = await Promise.all([
     getTransactionsData(),
