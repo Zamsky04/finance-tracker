@@ -1,13 +1,15 @@
-// src/app/(dashboard)/transactions/page.tsx
 import { getCategories } from '@/db/queries';
 import { TransactionForm } from '@/components/transaction-form';
 import { TransactionList } from '@/components/transaction-list';
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getTransactions() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/transactions`,
-    { cache: 'no-store' }
-  );
+  if (!baseUrl) throw new Error('NEXT_PUBLIC_BASE_URL is not set');
+
+  const res = await fetch(`${baseUrl}/api/transactions`, {
+    cache: 'no-store',
+  });
 
   if (!res.ok) return [];
   return res.json();

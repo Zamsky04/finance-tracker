@@ -1,11 +1,15 @@
+// src/app/(dashboard)/dashboard/page.tsx
 import { getCategories } from '@/db/queries';
 import { DashboardClient } from './page.client';
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getSummary() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/reports/summary`,
-    { cache: 'no-store' }
-  );
+  if (!baseUrl) throw new Error('NEXT_PUBLIC_BASE_URL is not set');
+
+  const res = await fetch(`${baseUrl}/api/reports/summary`, {
+    cache: 'no-store',
+  });
 
   if (!res.ok) {
     return {
@@ -19,20 +23,22 @@ async function getSummary() {
 }
 
 async function getExpenseBreakdown() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/reports/expense-breakdown`,
-    { cache: 'no-store' }
-  );
+  if (!baseUrl) throw new Error('NEXT_PUBLIC_BASE_URL is not set');
+
+  const res = await fetch(`${baseUrl}/api/reports/expense-breakdown`, {
+    cache: 'no-store',
+  });
 
   if (!res.ok) return [];
   return res.json();
 }
 
 async function getTransactions() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/transactions`,
-    { cache: 'no-store' }
-  );
+  if (!baseUrl) throw new Error('NEXT_PUBLIC_BASE_URL is not set');
+
+  const res = await fetch(`${baseUrl}/api/transactions`, {
+    cache: 'no-store',
+  });
 
   if (!res.ok) return [];
   return res.json();
