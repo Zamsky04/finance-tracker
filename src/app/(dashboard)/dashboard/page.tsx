@@ -1,20 +1,17 @@
-// src/app/(dashboard)/dashboard/page.tsx
-import { getCategories } from '@/db/queries';
+import { KpiCards } from '@/components/kpi-cards';
+import { ExpensePieChart } from '@/components/expense-pie-chart';
 import {
   getSummaryData,
   getExpenseBreakdownData,
-  getTransactionsData,
 } from '@/db/dashboard-queries';
-import { DashboardClient } from './page.client';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
 export default async function DashboardPage() {
-  const [summary, expenseData, transactions, categories] = await Promise.all([
+  const [summary, expenseData] = await Promise.all([
     getSummaryData(),
     getExpenseBreakdownData(),
-    getTransactionsData(),
-    getCategories(),
   ]);
 
   return (
@@ -22,21 +19,17 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="rounded-[28px] bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 p-6 text-white shadow-2xl">
           <p className="text-sm text-blue-100">Dashboard Keuangan</p>
-          <h1 className="text-2xl font-bold md:text-4xl">
-            Catatan pemasukan & pengeluaran
-          </h1>
+          <h1 className="text-2xl font-bold md:text-4xl">Ringkasan keuangan</h1>
           <p className="mt-2 max-w-2xl text-sm text-blue-50 md:text-base">
-            Kelola transaksi harian, lihat grafik pengeluaran, dan simpan bukti foto
-            transaksi dengan tampilan premium yang nyaman di mobile.
+            Lihat total pemasukan, pengeluaran, dan saldo secara cepat dalam satu halaman.
           </p>
         </section>
 
-        <DashboardClient
-          initialTransactions={transactions}
-          initialExpenseData={expenseData}
-          initialSummary={summary}
-          categories={categories}
-        />
+        <KpiCards summary={summary} />
+
+        <section className="grid gap-4 lg:grid-cols-1 lg:gap-6">
+          <ExpensePieChart data={expenseData} />
+        </section>
       </div>
     </main>
   );

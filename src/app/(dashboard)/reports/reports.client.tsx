@@ -1,22 +1,11 @@
-// src/app/(dashboard)/dashboard/page.client.tsx
 'use client';
 
 import { useState } from 'react';
-import { TransactionForm } from '@/components/transaction-form';
 import { ExpensePieChart } from '@/components/expense-pie-chart';
 import { ExpenseBarChart } from '@/components/expense-bar-chart';
-import { TransactionDetailSheet } from '@/components/transaction-detail-sheet';
-import { TransactionList, type TransactionItem } from '@/components/transaction-list';
 import { FiltersBar, type FilterMode } from '@/components/filters-bar';
 import { KpiCards } from '@/components/kpi-cards';
 import { resolveDateRange } from '@/lib/utils';
-
-type Category = {
-  id: string;
-  name: string;
-  type: 'income' | 'expense';
-  color?: string | null;
-};
 
 type ExpenseItem = {
   category: string;
@@ -32,10 +21,8 @@ type Summary = {
 };
 
 type Props = {
-  initialTransactions: TransactionItem[];
   initialExpenseData: ExpenseItem[];
   initialSummary: Summary;
-  categories: Category[];
 };
 
 type CurrentFilter = {
@@ -49,16 +36,12 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function DashboardClient({
-  initialTransactions,
+export function ReportsClient({
   initialExpenseData,
   initialSummary,
-  categories,
 }: Props) {
-  const [transactions, setTransactions] = useState<TransactionItem[]>(initialTransactions);
   const [expenseData, setExpenseData] = useState<ExpenseItem[]>(initialExpenseData);
   const [summary, setSummary] = useState<Summary>(initialSummary);
-  const [selected, setSelected] = useState<TransactionItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [filterLabel, setFilterLabel] = useState('Hari ini');
 
@@ -79,27 +62,19 @@ export function DashboardClient({
 
       const query = params.toString() ? `?${params.toString()}` : '';
 
-      const [txRes, expenseRes, summaryRes] = await Promise.all([
-        fetch(`/api/transactions${query}`, { cache: 'no-store' }),
+      const [expenseRes, summaryRes] = await Promise.all([
         fetch(`/api/reports/expense-breakdown${query}`, { cache: 'no-store' }),
         fetch(`/api/reports/summary${query}`, { cache: 'no-store' }),
       ]);
 
-      const txData = txRes.ok ? await txRes.json() : [];
       const expData = expenseRes.ok ? await expenseRes.json() : [];
       const sumData = summaryRes.ok
         ? await summaryRes.json()
         : { total_income: 0, total_expense: 0, balance: 0 };
 
-      setTransactions(txData);
       setExpenseData(expData);
       setSummary(sumData);
       setFilterLabel(range.label);
-
-      if (selected) {
-        const found = txData.find((item: TransactionItem) => item.id === selected.id) || null;
-        setSelected(found);
-      }
     } finally {
       setLoading(false);
     }
@@ -111,35 +86,28 @@ export function DashboardClient({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-        <KpiCards summary={summary} />
+    <main className="space-y-4 sm:space-y-6">
+      <section className="rounded-[24px] bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-500 p-5 text-white shadow-2xl sm:rounded-[28px] sm:p-6">
+        <p className="text-sm text-blue-100">Laporan Keuangan</p>
+        <h1 className="text-2xl font-bold md:text-4xl">Ringkasan & Grafik</h1>
+        <p className="mt-2 max-w-2xl text-sm text-blue-50 md:text-base">
+          Pantau pemasukan, pengeluaran, saldo, dan distribusi kategori berdasarkan periode.
+        </p>
+      </section>
 
-        <FiltersBar onApply={handleApplyFilter} />
+      <FiltersBar onApply={handleApplyFilter} />
 
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-700">
+      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-700">
         Periode aktif: <span className="font-semibold">{filterLabel}</span>
         {loading ? ' • Memuat data...' : ''}
-        </div>
+      </div>
 
-        <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:gap-6">
-        <TransactionForm categories={categories} onCreated={() => reloadAll()} />
+      <KpiCards summary={summary} />
+
+      <section className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         <ExpensePieChart data={expenseData} />
-        </section>
-
-        <section>
         <ExpenseBarChart data={expenseData} />
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr] lg:gap-6">
-        <TransactionList items={transactions} onSelect={setSelected} />
-        <TransactionDetailSheet
-            item={selected}
-            onDeleted={async () => {
-            setSelected(null);
-            await reloadAll();
-            }}
-        />
-        </section>
-    </div>
-    );
+      </section>
+    </main>
+  );
 }
