@@ -1,4 +1,3 @@
-// src/components/app-shell.tsx
 'use client';
 
 import Link from 'next/link';

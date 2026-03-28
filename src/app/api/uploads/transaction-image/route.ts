@@ -1,7 +1,7 @@
 import { put } from '@vercel/blob';
 import sharp from 'sharp';
 
-const MAX_INPUT_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_INPUT_SIZE = 1 * 1024 * 1024; 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg'];
 
 function sanitizeFileName(name: string) {

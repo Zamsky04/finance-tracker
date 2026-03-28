@@ -1,4 +1,3 @@
-// src/components/kpi-cards.tsx
 import { formatIDR } from '@/lib/money';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 

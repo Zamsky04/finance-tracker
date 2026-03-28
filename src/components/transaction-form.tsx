@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, ImageIcon, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { getNowLocalISOString } from '@/lib/date';
-
+import {
+  bankOptions,
+  eWalletOptions,
+  getPaymentProviderMeta,
+  type PaymentMethod,
+} from '@/lib/payment';
 import {
   Select,
   SelectContent,
@@ -15,7 +20,6 @@ import {
 } from '@/components/ui/select';
 
 type TxType = 'income' | 'expense';
-type PaymentMethod = 'bank_transfer' | 'e_wallet' | 'cash';
 
 type Category = {
   id: string;
@@ -29,7 +33,7 @@ type TransactionFormProps = {
   onCreated?: () => void | Promise<void>;
 };
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; 
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg'];
 const ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg'];
 
@@ -47,26 +51,33 @@ function getFileExtension(fileName: string) {
   return fileName.split('.').pop()?.toLowerCase() ?? '';
 }
 
-const bankOptions = [
-  { value: 'bca', label: 'BCA' },
-  { value: 'bri', label: 'BRI' },
-  { value: 'mandiri', label: 'Mandiri' },
-  { value: 'bni', label: 'BNI' },
-  { value: 'seabank', label: 'SeaBank' },
-  { value: 'cimb_niaga', label: 'CIMB Niaga' },
-  { value: 'permata', label: 'Permata' },
-  { value: 'btn', label: 'BTN' },
-  { value: 'danamon', label: 'Danamon' },
-  { value: 'bsi', label: 'BSI' },
-];
+function PaymentOptionContent({
+  label,
+  provider,
+}: {
+  label: string;
+  provider: string;
+}) {
+  const meta = getPaymentProviderMeta(provider);
 
-const eWalletOptions = [
-  { value: 'gopay', label: 'GoPay' },
-  { value: 'ovo', label: 'OVO' },
-  { value: 'shopeepay', label: 'ShopeePay' },
-  { value: 'dana', label: 'DANA' },
-  { value: 'linkaja', label: 'LinkAja' },
-];
+  return (
+    <div className="flex items-center gap-2">
+      {meta?.logo ? (
+        <img
+          src={meta.logo}
+          alt={label}
+          className="h-5 w-5 rounded-sm object-contain"
+        />
+      ) : (
+        <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-slate-100 text-[9px] font-bold text-slate-500">
+          {label.slice(0, 1)}
+        </div>
+      )}
+      <span>{label}</span>
+    </div>
+  );
+}
+
 
 export function TransactionForm({
   categories = [],
@@ -397,16 +408,39 @@ export function TransactionForm({
             disabled={!paymentMethod || paymentMethod === 'cash'}
           >
             <SelectTrigger className="h-12 w-full rounded-2xl border border-slate-100 bg-slate-50/80 px-4 text-sm text-slate-900 shadow-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60">
-              <SelectValue
-                placeholder={
-                  !paymentMethod
-                    ? 'Pilih metode dulu'
-                    : paymentMethod === 'cash'
-                    ? 'Cash tidak butuh provider'
-                    : 'Pilih provider'
-                }
-              />
+              {paymentProvider ? (
+                <div className="flex items-center gap-2">
+                  {getPaymentProviderMeta(paymentProvider)?.logo ? (
+                    <img
+                      src={getPaymentProviderMeta(paymentProvider)?.logo}
+                      alt={getPaymentProviderMeta(paymentProvider)?.label ?? paymentProvider}
+                      className="h-5 w-5 rounded-sm object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-slate-100 text-[9px] font-bold text-slate-500">
+                      {(getPaymentProviderMeta(paymentProvider)?.label ?? paymentProvider)
+                        .slice(0, 1)
+                        .toUpperCase()}
+                    </div>
+                  )}
+
+                  <span className="truncate">
+                    {getPaymentProviderMeta(paymentProvider)?.label ?? paymentProvider}
+                  </span>
+                </div>
+              ) : (
+                <SelectValue
+                  placeholder={
+                    !paymentMethod
+                      ? 'Pilih metode dulu'
+                      : paymentMethod === 'cash'
+                      ? 'Cash tidak butuh provider'
+                      : 'Pilih provider'
+                  }
+                />
+              )}
             </SelectTrigger>
+
             <SelectContent className="rounded-2xl">
               {paymentMethod === 'cash' ? (
                 <div className="px-3 py-2 text-sm text-slate-500">
@@ -415,13 +449,11 @@ export function TransactionForm({
               ) : paymentProviderOptions.length > 0 ? (
                 paymentProviderOptions.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
-                    {item.label}
+                    <PaymentOptionContent label={item.label} provider={item.value} />
                   </SelectItem>
                 ))
               ) : (
-                <div className="px-3 py-2 text-sm text-slate-500">
-                  Belum ada pilihan
-                </div>
+                <div className="px-3 py-2 text-sm text-slate-500">Belum ada pilihan</div>
               )}
             </SelectContent>
           </Select>

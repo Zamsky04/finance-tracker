@@ -1,4 +1,3 @@
-// src/app/api/reports/expense-breakdown/route.ts
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 

@@ -1,4 +1,3 @@
-// src/app/(dashboard)/layout.tsx
 import { AppShell } from '@/components/app-shell';
 
 export default function DashboardLayout({

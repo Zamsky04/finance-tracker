@@ -1,10 +1,14 @@
-// src/components/transaction-list.tsx
 'use client';
 
 import { formatDateTimeID } from '@/lib/date';
 import { formatIDR } from '@/lib/money';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowDownLeft, ArrowUpRight, ListX } from 'lucide-react';
+import {
+  getPaymentProviderMeta,
+  getPaymentShortLabel,
+  renderPaymentMethodIcon,
+} from '@/lib/payment';
 
 export type TransactionItem = {
   id: string;
@@ -26,6 +30,41 @@ type Props = {
   items: TransactionItem[];
   onSelect?: (item: TransactionItem) => void;
 };
+
+function PaymentBadge({
+  method,
+  provider,
+}: {
+  method?: 'bank_transfer' | 'e_wallet' | 'cash' | null;
+  provider?: string | null;
+}) {
+  if (!method) {
+    return (
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500">
+        {renderPaymentMethodIcon(undefined, 'h-3 w-3')}
+        <span>Belum dipilih</span>
+      </div>
+    );
+  }
+
+  const meta = getPaymentProviderMeta(provider);
+  const shortLabel = getPaymentShortLabel(method, provider);
+
+  return (
+    <div className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">
+      {meta?.logo ? (
+        <img
+          src={meta.logo}
+          alt={shortLabel}
+          className="h-3.5 w-3.5 shrink-0 rounded-sm object-contain"
+        />
+      ) : (
+        renderPaymentMethodIcon(method, 'h-3 w-3 shrink-0')
+      )}
+      <span className="truncate">{shortLabel}</span>
+    </div>
+  );
+}
 
 export function TransactionList({ items, onSelect }: Props) {
   return (
@@ -59,9 +98,9 @@ export function TransactionList({ items, onSelect }: Props) {
                 onClick={() => onSelect?.(item)}
                 className="group w-full rounded-2xl px-3 py-3.5 text-left transition-all duration-150 hover:bg-slate-50 active:scale-[0.99]"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+                    className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
                       item.type === 'income'
                         ? 'bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100'
                         : 'bg-rose-50 text-rose-400 group-hover:bg-rose-100'
@@ -75,23 +114,35 @@ export function TransactionList({ items, onSelect }: Props) {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-800">
-                      {item.title}
-                    </p>
-                    <p className="mt-0.5 truncate text-[11px] text-slate-400">
-                      {item.categoryName || 'Tanpa kategori'}
-                      <span className="mx-1.5 text-slate-300">•</span>
-                      {formatDateTimeID(item.transactionAt)}
-                    </p>
-                  </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800">
+                          {item.title}
+                        </p>
+                        <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                          {item.categoryName || 'Tanpa kategori'}
+                          <span className="mx-1.5 text-slate-300">•</span>
+                          {formatDateTimeID(item.transactionAt)}
+                        </p>
+                      </div>
 
-                  <div
-                    className={`shrink-0 text-right text-sm font-bold tabular-nums ${
-                      item.type === 'income' ? 'text-emerald-600' : 'text-rose-500'
-                    }`}
-                  >
-                    {item.type === 'income' ? '+' : '−'}&nbsp;
-                    {formatIDR(item.amount)}
+                      <div
+                        className={`shrink-0 text-right text-sm font-bold tabular-nums ${
+                          item.type === 'income'
+                            ? 'text-emerald-600'
+                            : 'text-rose-500'
+                        }`}
+                      >
+                        {item.type === 'income' ? '+' : '−'} {formatIDR(item.amount)}
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <PaymentBadge
+                        method={item.paymentMethod}
+                        provider={item.paymentProvider}
+                      />
+                    </div>
                   </div>
                 </div>
               </button>

@@ -14,48 +14,45 @@ import {
   Expand,
 } from 'lucide-react';
 import type { TransactionItem } from './transaction-list';
+import {
+  getPaymentMethodLabel,
+  getPaymentProviderMeta,
+  renderPaymentMethodIcon,
+} from '@/lib/payment';
 
 type Props = {
   item: TransactionItem | null;
   onDeleted?: () => void;
 };
 
-function formatPayment(
-  method?: 'bank_transfer' | 'e_wallet' | 'cash' | null,
-  provider?: string | null
-) {
-  if (!method) return '–';
-  if (method === 'cash') return 'Cash';
-
-  const providerLabelMap: Record<string, string> = {
-    bca: 'BCA',
-    bri: 'BRI',
-    mandiri: 'Mandiri',
-    bni: 'BNI',
-    seabank: 'SeaBank',
-    cimb_niaga: 'CIMB Niaga',
-    permata: 'Permata',
-    btn: 'BTN',
-    danamon: 'Danamon',
-    bsi: 'BSI',
-    gopay: 'GoPay',
-    ovo: 'OVO',
-    shopeepay: 'ShopeePay',
-    dana: 'DANA',
-    linkaja: 'LinkAja',
-  };
-
-  const providerLabel = provider ? providerLabelMap[provider] ?? provider : '';
-
-  if (method === 'bank_transfer') {
-    return providerLabel ? `Transfer Bank - ${providerLabel}` : 'Transfer Bank';
+function PaymentInfo({
+  method,
+  provider,
+}: {
+  method?: 'bank_transfer' | 'e_wallet' | 'cash' | null;
+  provider?: string | null;
+}) {
+  if (!method) {
+    return <span className="text-sm font-medium text-slate-400">–</span>;
   }
 
-  if (method === 'e_wallet') {
-    return providerLabel ? `E-Wallet - ${providerLabel}` : 'E-Wallet';
-  }
+  const meta = getPaymentProviderMeta(provider);
+  const label = meta?.label ?? (method === 'cash' ? 'Cash' : 'Provider');
 
-  return '–';
+  return (
+    <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+      {meta?.logo ? (
+        <img
+          src={meta.logo}
+          alt={label}
+          className="h-5 w-5 rounded-sm object-contain"
+        />
+      ) : (
+        renderPaymentMethodIcon(method, 'h-4 w-4')
+      )}
+      <span>{label}</span>
+    </div>
+  );
 }
 
 export function TransactionDetailSheet({ item, onDeleted }: Props) {
@@ -180,50 +177,81 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
             </div>
 
             <div className="grid gap-0 divide-y divide-slate-50 px-6">
-              {[
-                {
-                  Icon: Tag,
-                  label: 'Kategori',
-                  value: item.categoryName || 'Tanpa kategori',
-                  muted: !item.categoryName,
-                },
-                {
-                  Icon: CreditCard,
-                  label: 'Pembayaran',
-                  value: formatPayment(item.paymentMethod, item.paymentProvider),
-                  muted: !item.paymentMethod,
-                },
-                {
-                  Icon: Clock,
-                  label: 'Tanggal & Waktu',
-                  value: formatDateTimeID(item.transactionAt),
-                  muted: false,
-                },
-                {
-                  Icon: FileText,
-                  label: 'Catatan',
-                  value: item.note || '–',
-                  muted: !item.note,
-                },
-              ].map(({ Icon, label, value, muted }) => (
-                <div key={label} className="flex items-start gap-3 py-3.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50">
-                    <Icon className="h-3.5 w-3.5 text-slate-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
-                      {label}
-                    </p>
-                    <p
-                      className={`mt-0.5 text-sm font-medium ${
-                        muted ? 'text-slate-400' : 'text-slate-800'
-                      }`}
-                    >
-                      {value}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                  <Tag className="h-3.5 w-3.5 text-slate-400" />
                 </div>
-              ))}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                    Kategori
+                  </p>
+                  <p
+                    className={`mt-0.5 text-sm font-medium ${
+                      item.categoryName ? 'text-slate-800' : 'text-slate-400'
+                    }`}
+                  >
+                    {item.categoryName || 'Tanpa kategori'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                  <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                    Pembayaran
+                  </p>
+
+                  <div className="mt-1">
+                    <PaymentInfo
+                      method={item.paymentMethod}
+                      provider={item.paymentProvider}
+                    />
+                  </div>
+
+                  <p
+                    className={`mt-1.5 text-sm font-medium ${
+                      item.paymentMethod ? 'text-slate-800' : 'text-slate-400'
+                    }`}
+                  >
+                    {getPaymentMethodLabel(item.paymentMethod, item.paymentProvider)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                  <Clock className="h-3.5 w-3.5 text-slate-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                    Tanggal & Waktu
+                  </p>
+                  <p className="mt-0.5 text-sm font-medium text-slate-800">
+                    {formatDateTimeID(item.transactionAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50">
+                  <FileText className="h-3.5 w-3.5 text-slate-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                    Catatan
+                  </p>
+                  <p
+                    className={`mt-0.5 text-sm font-medium ${
+                      item.note ? 'text-slate-800' : 'text-slate-400'
+                    }`}
+                  >
+                    {item.note || '–'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}

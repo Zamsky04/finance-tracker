@@ -1,4 +1,3 @@
-// src/app/api/transactions/route.ts
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, transactions } from '@/db/schema';
