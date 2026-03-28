@@ -7,7 +7,8 @@ import { FiltersBar, type ReportFilters } from '@/components/filters-bar';
 import { KpiCards } from '@/components/kpi-cards';
 import { resolveDateRange } from '@/lib/utils';
 import { CalendarDays } from 'lucide-react';
- 
+import { format } from 'date-fns';
+
 type ExpenseItem = {
   category: string;
   color: string;
@@ -25,9 +26,10 @@ type Props = {
   initialExpenseData: ExpenseItem[];
   initialSummary: Summary;
 };
- 
+
+
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return format(new Date(), 'yyyy-MM-dd');
 }
  
 export function ReportsClient({ initialExpenseData, initialSummary }: Props) {

@@ -1,21 +1,29 @@
+// src/lib/utils.ts
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
   addDays,
+  endOfDay,
   endOfMonth,
   endOfYear,
   format,
   parseISO,
+  startOfDay,
   startOfYear,
 } from 'date-fns';
+import { id } from 'date-fns/locale';
 import type { ReportFilters } from '@/components/filters-bar';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-function toYmd(date: Date) {
-  return format(date, 'yyyy-MM-dd');
+function toIsoStartOfDay(date: Date) {
+  return startOfDay(date).toISOString();
+}
+
+function toIsoEndOfDay(date: Date) {
+  return endOfDay(date).toISOString();
 }
 
 const monthNames = [
@@ -36,12 +44,11 @@ const monthNames = [
 export function resolveDateRange(filters: ReportFilters) {
   if (filters.mode === 'day') {
     const date = filters.baseDate ? parseISO(filters.baseDate) : new Date();
-    const ymd = toYmd(date);
 
     return {
-      from: ymd,
-      to: ymd,
-      label: format(date, 'dd MMM yyyy'),
+      from: toIsoStartOfDay(date),
+      to: toIsoEndOfDay(date),
+      label: format(date, 'dd MMM yyyy', { locale: id }),
     };
   }
 
@@ -50,9 +57,9 @@ export function resolveDateRange(filters: ReportFilters) {
     const end = addDays(start, 6);
 
     return {
-      from: toYmd(start),
-      to: toYmd(end),
-      label: `${format(start, 'dd MMM yyyy')} - ${format(end, 'dd MMM yyyy')}`,
+      from: toIsoStartOfDay(start),
+      to: toIsoEndOfDay(end),
+      label: `${format(start, 'dd MMM yyyy', { locale: id })} - ${format(end, 'dd MMM yyyy', { locale: id })}`,
     };
   }
 
@@ -64,8 +71,8 @@ export function resolveDateRange(filters: ReportFilters) {
     const end = endOfMonth(start);
 
     return {
-      from: toYmd(start),
-      to: toYmd(end),
+      from: toIsoStartOfDay(start),
+      to: toIsoEndOfDay(end),
       label: `${monthNames[month - 1]} ${year}`,
     };
   }
@@ -76,18 +83,21 @@ export function resolveDateRange(filters: ReportFilters) {
     const end = endOfYear(start);
 
     return {
-      from: toYmd(start),
-      to: toYmd(end),
+      from: toIsoStartOfDay(start),
+      to: toIsoEndOfDay(end),
       label: `Tahun ${year}`,
     };
   }
 
+  const customFrom = filters.from ? parseISO(filters.from) : undefined;
+  const customTo = filters.to ? parseISO(filters.to) : undefined;
+
   return {
-    from: filters.from,
-    to: filters.to,
+    from: customFrom ? toIsoStartOfDay(customFrom) : undefined,
+    to: customTo ? toIsoEndOfDay(customTo) : undefined,
     label:
       filters.from && filters.to
-        ? `${filters.from} - ${filters.to}`
+        ? `${format(customFrom!, 'dd MMM yyyy', { locale: id })} - ${format(customTo!, 'dd MMM yyyy', { locale: id })}`
         : 'Custom range',
   };
 }
