@@ -1,4 +1,3 @@
-// src/components/transaction-form.tsx
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -30,6 +29,10 @@ type TransactionFormProps = {
   onCreated?: () => void | Promise<void>;
 };
 
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg'];
+const ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg'];
+
 function digitsOnly(value: string) {
   return value.replace(/\D/g, '');
 }
@@ -38,6 +41,10 @@ function formatRupiahInput(value: string) {
   const digits = digitsOnly(value);
   if (!digits) return '';
   return new Intl.NumberFormat('id-ID').format(Number(digits));
+}
+
+function getFileExtension(fileName: string) {
+  return fileName.split('.').pop()?.toLowerCase() ?? '';
 }
 
 const bankOptions = [
@@ -118,11 +125,35 @@ export function TransactionForm({
     setAmountValue(digits ? Number(digits) : 0);
   };
 
+  const clearImage = () => {
+    setImageUrl(null);
+    setImagePath(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const validateImageFile = (file: File) => {
+    const ext = getFileExtension(file.name);
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      throw new Error('Format gambar harus PNG, JPG, atau JPEG');
+    }
+
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      throw new Error('Ekstensi file harus .png, .jpg, atau .jpeg');
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Ukuran gambar maksimal 1 MB');
+    }
+  };
+
   const handleUpload = async (file: File) => {
     setUploading(true);
     const toastId = toast.loading('Mengupload gambar bukti transaksi...');
 
     try {
+      validateImageFile(file);
+
       const formData = new FormData();
       formData.append('file', file);
 
@@ -132,7 +163,9 @@ export function TransactionForm({
       });
 
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || 'Upload gambar gagal');
+      if (!res.ok) {
+        throw new Error(data?.error || 'Upload gambar gagal');
+      }
 
       setImageUrl(data?.url ?? null);
       setImagePath(data?.pathname ?? null);
@@ -142,6 +175,8 @@ export function TransactionForm({
         description: 'Bukti transaksi siap disimpan.',
       });
     } catch (error) {
+      clearImage();
+
       toast.error('Upload gambar gagal', {
         id: toastId,
         description:
@@ -192,6 +227,11 @@ export function TransactionForm({
       !paymentProvider
     ) {
       toast.error('Provider pembayaran wajib dipilih');
+      return;
+    }
+
+    if (uploading) {
+      toast.error('Tunggu sampai proses upload gambar selesai');
       return;
     }
 
@@ -411,13 +451,12 @@ export function TransactionForm({
             </span>
           </div>
 
-          {imageUrl && (
+          {imageUrl && !uploading && (
             <button
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                setImageUrl(null);
-                setImagePath(null);
+                clearImage();
               }}
               className="shrink-0 rounded-full p-0.5 text-emerald-400 hover:bg-emerald-100 hover:text-emerald-600"
             >
@@ -428,14 +467,22 @@ export function TransactionForm({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
             className="hidden"
+            disabled={uploading || submitting}
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleUpload(file);
+              if (file) {
+                void handleUpload(file);
+              }
             }}
           />
         </label>
+
+        <p className="text-[11px] text-slate-400">
+          Format: PNG, JPG, JPEG. Maksimal 1 MB. File akan otomatis dikonversi
+          menjadi WebP/AVIF di server.
+        </p>
 
         <textarea
           value={note}

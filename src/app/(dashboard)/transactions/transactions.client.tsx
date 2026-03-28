@@ -1,3 +1,4 @@
+// src/app/(dashboard)/transactions/transactions.client.tsx
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 
 type Category = {
   id: string;
-  name: string;
+  name: string; 
   type: 'income' | 'expense';
   color?: string | null;
 };
