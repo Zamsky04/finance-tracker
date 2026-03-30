@@ -1,5 +1,13 @@
-import { redirect } from "next/navigation";
+// src/app/page.tsx
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
 
-export default function Home() {
-  redirect("/dashboard");
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect('/dashboard');
+  }
+
+  redirect('/login');
 }

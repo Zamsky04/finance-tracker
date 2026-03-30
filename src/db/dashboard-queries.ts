@@ -1,4 +1,5 @@
-import { desc, eq } from 'drizzle-orm';
+// src/db/dashboard-queries.ts
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, transactions } from '@/db/schema';
 
@@ -34,12 +35,24 @@ export type TransactionData = {
   categoryColor: string | null;
 };
 
-export async function getSummaryData(): Promise<SummaryData> {
-  const rows = await db.select().from(transactions);
+function toNumber(value: string | number | null | undefined) {
+  if (value == null) return 0;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+export async function getSummaryData(userId: string): Promise<SummaryData> {
+  const rows = await db
+    .select({
+      type: transactions.type,
+      amount: transactions.amount,
+    })
+    .from(transactions)
+    .where(eq(transactions.userId, userId));
 
   return rows.reduce<SummaryData>(
     (acc, item) => {
-      const amount = Number(item.amount ?? 0);
+      const amount = toNumber(item.amount);
 
       if (item.type === 'income') {
         acc.total_income += amount;
@@ -59,7 +72,9 @@ export async function getSummaryData(): Promise<SummaryData> {
   );
 }
 
-export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]> {
+export async function getExpenseBreakdownData(
+  userId: string
+): Promise<ExpenseBreakdownData[]> {
   const expenseOnly = await db
     .select({
       amount: transactions.amount,
@@ -67,14 +82,25 @@ export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]>
       categoryColor: categories.color,
     })
     .from(transactions)
-    .leftJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(eq(transactions.type, 'expense'));
+    .leftJoin(
+      categories,
+      and(
+        eq(transactions.categoryId, categories.id),
+        eq(categories.userId, userId)
+      )
+    )
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.type, 'expense')
+      )
+    );
 
   const grouped = new Map<string, ExpenseBreakdownData>();
   let grandTotal = 0;
 
   for (const item of expenseOnly) {
-    const amount = Number(item.amount ?? 0);
+    const amount = toNumber(item.amount);
     const category = item.categoryName ?? 'Tanpa Kategori';
     const color = item.categoryColor ?? '#3b82f6';
 
@@ -103,7 +129,7 @@ export async function getExpenseBreakdownData(): Promise<ExpenseBreakdownData[]>
     .sort((a, b) => b.total - a.total);
 }
 
-export async function getTransactionsData(): Promise<TransactionData[]> {
+export async function getTransactionsData(userId: string): Promise<TransactionData[]> {
   const rows = await db
     .select({
       id: transactions.id,
@@ -121,14 +147,21 @@ export async function getTransactionsData(): Promise<TransactionData[]> {
       categoryColor: categories.color,
     })
     .from(transactions)
-    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .leftJoin(
+      categories,
+      and(
+        eq(transactions.categoryId, categories.id),
+        eq(categories.userId, userId)
+      )
+    )
+    .where(eq(transactions.userId, userId))
     .orderBy(desc(transactions.transactionAt), desc(transactions.id));
 
   return rows.map((item) => ({
     id: String(item.id),
     type: item.type as TxType,
     title: item.title,
-    amount: Number(item.amount ?? 0),
+    amount: toNumber(item.amount),
     note: item.note,
     transactionAt: item.transactionAt,
     paymentMethod: (item.paymentMethod ?? null) as PaymentMethod | null,
