@@ -1,4 +1,3 @@
-// src/app/api/profile/route.ts
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';

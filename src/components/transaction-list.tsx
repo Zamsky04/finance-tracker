@@ -16,7 +16,7 @@ export type TransactionItem = {
   title: string;
   amount: string | number;
   note: string | null;
-  transactionAt: string | Date;
+  transactionAt: number;
   imageUrl?: string | null;
   imagePath?: string | null;
   categoryId?: string | null;

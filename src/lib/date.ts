@@ -5,9 +5,25 @@ export function getNowLocalISOString() {
   return local.toISOString().slice(0, 16);
 }
 
-export function formatDateTimeID(value: string | Date) {
+type DateLike = string | Date | number | null | undefined;
+
+function toDate(value: DateLike) {
+  if (value == null) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatDateTimeID(value: DateLike) {
+  const date = toDate(value);
+  if (!date) return '-';
+
   return new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value));
+  }).format(date);
 }

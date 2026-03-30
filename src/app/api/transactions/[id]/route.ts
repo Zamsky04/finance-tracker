@@ -1,19 +1,26 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { transactions } from '@/db/schema';
+import { categories, transactions } from '@/db/schema';
 import { transactionSchema } from '@/lib/validations';
+import { getCurrentUser } from '@/lib/auth';
 
 type Context = {
   params: Promise<{ id: string }>;
 };
 
 export async function GET(_req: Request, context: Context) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await context.params;
 
   const [row] = await db
     .select()
     .from(transactions)
-    .where(eq(transactions.id, id))
+    .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)))
     .limit(1);
 
   if (!row) {
@@ -24,6 +31,12 @@ export async function GET(_req: Request, context: Context) {
 }
 
 export async function PATCH(req: Request, context: Context) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await context.params;
   const body = await req.json();
 
@@ -31,6 +44,26 @@ export async function PATCH(req: Request, context: Context) {
 
   if (!parsed.success) {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (parsed.data.categoryId) {
+    const category = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.id, parsed.data.categoryId),
+          eq(categories.userId, user.id)
+        )
+      )
+      .limit(1);
+
+    if (category.length === 0) {
+      return Response.json(
+        { error: 'Kategori tidak ditemukan atau bukan milik user ini.' },
+        { status: 400 }
+      );
+    }
   }
 
   const [updated] = await db
@@ -41,12 +74,17 @@ export async function PATCH(req: Request, context: Context) {
       amount: String(parsed.data.amount),
       note: parsed.data.note || null,
       categoryId: parsed.data.categoryId || null,
-      transactionAt: new Date(parsed.data.transactionAt),
+      transactionAt: new Date(parsed.data.transactionAt).getTime(),
+      paymentMethod: parsed.data.paymentMethod || null,
+      paymentProvider:
+        parsed.data.paymentMethod === 'cash'
+          ? null
+          : parsed.data.paymentProvider || null,
       imageUrl: parsed.data.imageUrl || null,
       imagePath: parsed.data.imagePath || null,
-      updatedAt: new Date(),
+      updatedAt: Date.now(),
     })
-    .where(eq(transactions.id, id))
+    .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)))
     .returning();
 
   if (!updated) {
@@ -57,11 +95,17 @@ export async function PATCH(req: Request, context: Context) {
 }
 
 export async function DELETE(_req: Request, context: Context) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await context.params;
 
   const [deleted] = await db
     .delete(transactions)
-    .where(eq(transactions.id, id))
+    .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)))
     .returning();
 
   if (!deleted) {

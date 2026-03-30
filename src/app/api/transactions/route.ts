@@ -19,11 +19,11 @@ export async function GET(req: Request) {
   const conditions = [eq(transactions.userId, user.id)];
 
   if (from) {
-    conditions.push(gte(transactions.transactionAt, new Date(from)));
+    conditions.push(gte(transactions.transactionAt, new Date(from).getTime()));
   }
 
   if (to) {
-    conditions.push(lte(transactions.transactionAt, new Date(to)));
+    conditions.push(lte(transactions.transactionAt, new Date(to).getTime()));
   }
 
   if (type === 'income' || type === 'expense') {
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       amount: String(parsed.data.amount),
       note: parsed.data.note || null,
       categoryId: parsed.data.categoryId || null,
-      transactionAt: new Date(parsed.data.transactionAt),
+      transactionAt: new Date(parsed.data.transactionAt).getTime(),
       paymentMethod: parsed.data.paymentMethod || null,
       paymentProvider:
         parsed.data.paymentMethod === 'cash'

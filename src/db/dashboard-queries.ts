@@ -25,7 +25,7 @@ export type TransactionData = {
   title: string;
   amount: number;
   note: string | null;
-  transactionAt: Date;
+  transactionAt: number;
   paymentMethod: PaymentMethod | null;
   paymentProvider: string | null;
   imageUrl: string | null;

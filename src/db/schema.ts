@@ -1,22 +1,25 @@
 // src/db/schema.ts
+import { sql } from 'drizzle-orm';
 import {
+  bigint,
   index,
   numeric,
   pgTable,
   text,
-  timestamp,
   uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+
+const epochNow = sql`public.epoch_ms_now()`;
 
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey(),
   fullName: varchar('full_name', { length: 150 }),
   email: varchar('email', { length: 255 }),
   avatarUrl: text('avatar_url'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: bigint('created_at_ms', { mode: 'number' }).default(epochNow).notNull(),
+  updatedAt: bigint('updated_at_ms', { mode: 'number' }).default(epochNow).notNull(),
 });
 
 export const categories = pgTable(
@@ -30,8 +33,8 @@ export const categories = pgTable(
       .notNull(),
     color: varchar('color', { length: 20 }),
     icon: varchar('icon', { length: 60 }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: bigint('created_at_ms', { mode: 'number' }).default(epochNow).notNull(),
+    updatedAt: bigint('updated_at_ms', { mode: 'number' }).default(epochNow).notNull(),
   },
   (table) => ({
     userIdIdx: index('idx_categories_user_id').on(table.userId),
@@ -57,8 +60,8 @@ export const transactions = pgTable(
     categoryId: uuid('category_id').references(() => categories.id, {
       onDelete: 'set null',
     }),
-    transactionAt: timestamp('transaction_at', { withTimezone: true })
-      .defaultNow()
+    transactionAt: bigint('transaction_at_ms', { mode: 'number' })
+      .default(epochNow)
       .notNull(),
     paymentMethod: varchar('payment_method', { length: 30 }).$type<
       'bank_transfer' | 'e_wallet' | 'cash' | null
@@ -66,8 +69,8 @@ export const transactions = pgTable(
     paymentProvider: varchar('payment_provider', { length: 50 }),
     imageUrl: text('image_url'),
     imagePath: text('image_path'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: bigint('created_at_ms', { mode: 'number' }).default(epochNow).notNull(),
+    updatedAt: bigint('updated_at_ms', { mode: 'number' }).default(epochNow).notNull(),
   },
   (table) => ({
     userIdIdx: index('idx_transactions_user_id').on(table.userId),
