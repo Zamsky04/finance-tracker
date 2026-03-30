@@ -1,7 +1,12 @@
-// src/app/api/reports/expense-breakdown
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
+
+type Row = {
+  date: string;
+  income: number | string;
+  expense: number | string;
+};
 
 export async function GET(req: Request) {
   const user = await getCurrentUser();
@@ -17,35 +22,27 @@ export async function GET(req: Request) {
   const fromMs = from ? new Date(from).getTime() : null;
   const toMs = to ? new Date(to).getTime() : null;
 
-  const result = await db.execute(sql`
-    with raw as (
+  const result = await db.execute(sql<Row>`
+    with filtered as (
       select
-        coalesce(c.name, 'Tanpa Kategori') as category,
-        coalesce(c.color, '#3b82f6') as color,
-        sum(t.amount)::numeric as total
+        to_char(
+          to_timestamp(t.transaction_at_ms / 1000.0) at time zone 'Asia/Jakarta',
+          'YYYY-MM-DD'
+        ) as date,
+        t.type,
+        t.amount
       from transactions t
-      left join categories c
-        on c.id = t.category_id
-       and c.user_id = ${user.id}
       where t.user_id = ${user.id}
-        and t.type = 'expense'
         and (${fromMs}::bigint is null or t.transaction_at_ms >= ${fromMs}::bigint)
         and (${toMs}::bigint is null or t.transaction_at_ms <= ${toMs}::bigint)
-      group by 1, 2
-    ),
-    total_sum as (
-      select coalesce(sum(total), 0) as grand_total from raw
     )
     select
-      raw.category,
-      raw.color,
-      raw.total,
-      case
-        when total_sum.grand_total = 0 then 0
-        else round((raw.total / total_sum.grand_total) * 100, 2)
-      end as percentage
-    from raw, total_sum
-    order by raw.total desc
+      date,
+      coalesce(sum(case when type = 'income' then amount else 0 end), 0) as income,
+      coalesce(sum(case when type = 'expense' then amount else 0 end), 0) as expense
+    from filtered
+    group by date
+    order by date asc
   `);
 
   return Response.json(result.rows);

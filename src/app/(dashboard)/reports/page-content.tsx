@@ -1,5 +1,5 @@
 import {
-  getExpenseBreakdownData,
+  getCashflowTrendData,
   getSummaryData,
 } from '@/db/dashboard-queries';
 import { ReportsClient } from './reports.client';
@@ -9,15 +9,15 @@ type Props = {
 };
 
 export async function ReportsPageContent({ userId }: Props) {
-  const [summary, expenseData] = await Promise.all([
+  const [summary, trendData] = await Promise.all([
     getSummaryData(userId),
-    getExpenseBreakdownData(userId),
+    getCashflowTrendData(userId),
   ]);
 
   return (
     <ReportsClient
       initialSummary={summary}
-      initialExpenseData={expenseData}
+      initialTrendData={trendData}
     />
   );
 }

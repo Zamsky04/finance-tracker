@@ -19,6 +19,54 @@ export type ExpenseBreakdownData = {
   percentage: number;
 };
 
+export type CashflowTrendData = {
+  date: string;
+  income: number;
+  expense: number;
+};
+
+export async function getCashflowTrendData(
+  userId: string
+): Promise<CashflowTrendData[]> {
+  const rows = await db
+    .select({
+      type: transactions.type,
+      amount: transactions.amount,
+      transactionAt: transactions.transactionAt,
+    })
+    .from(transactions)
+    .where(eq(transactions.userId, userId))
+    .orderBy(desc(transactions.transactionAt));
+
+  const grouped = new Map<string, CashflowTrendData>();
+
+  for (const item of rows) {
+    const amount = toNumber(item.amount);
+
+    const dateKey = new Date(item.transactionAt).toISOString().slice(0, 10);
+
+    const existing = grouped.get(dateKey);
+
+    if (existing) {
+      if (item.type === 'income') {
+        existing.income += amount;
+      } else {
+        existing.expense += amount;
+      }
+    } else {
+      grouped.set(dateKey, {
+        date: dateKey,
+        income: item.type === 'income' ? amount : 0,
+        expense: item.type === 'expense' ? amount : 0,
+      });
+    }
+  }
+
+  return Array.from(grouped.values()).sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
+}
+
 export type TransactionData = {
   id: string;
   type: TxType;
