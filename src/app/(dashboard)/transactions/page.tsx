@@ -1,8 +1,7 @@
-// src/app/(dashboard)/transactions/page.tsx
-import { getCategories } from '@/db/queries';
-import { getTransactionsData } from '@/db/dashboard-queries';
+import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
-import { TransactionsClient } from './transactions.client';
+import { TransactionsPageContent } from './page-content';
+import { TransactionsPageSkeleton } from './page-skeleton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,15 +9,9 @@ export const revalidate = 0;
 export default async function TransactionsPage() {
   const user = await requireUser();
 
-  const [transactions, categories] = await Promise.all([
-    getTransactionsData(user.id),
-    getCategories(user.id),
-  ]);
-
   return (
-    <TransactionsClient
-      initialTransactions={transactions}
-      categories={categories}
-    />
+    <Suspense fallback={<TransactionsPageSkeleton />}>
+      <TransactionsPageContent userId={user.id} />
+    </Suspense>
   );
 }

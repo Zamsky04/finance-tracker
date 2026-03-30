@@ -1,4 +1,3 @@
-// src/app/(dashboard)/layout.tsx
 import { AppShell } from '@/components/app-shell';
 import { requireUser } from '@/lib/auth';
 
@@ -7,7 +6,23 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireUser();
+  const user = await requireUser();
 
-  return <AppShell>{children}</AppShell>;
+  const metadata = user.user_metadata ?? {};
+
+  return (
+    <AppShell
+      user={{
+        id: user.id,
+        name:
+          metadata.full_name ||
+          metadata.name ||
+          user.email?.split('@')[0] ||
+          'User',
+        email: user.email || '',
+      }}
+    >
+      {children}
+    </AppShell>
+  );
 }

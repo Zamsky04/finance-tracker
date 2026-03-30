@@ -1,19 +1,13 @@
-// src/app/(dashboard)/dashboard/page.tsx
-import { KpiCards } from '@/components/kpi-cards';
-import { ExpensePieChart } from '@/components/expense-pie-chart';
-import { getExpenseBreakdownData, getSummaryData } from '@/db/dashboard-queries';
+import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
+import { DashboardPageContent } from './page-content';
+import { DashboardPageSkeleton } from './page-skeleton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function DashboardPage() {
   const user = await requireUser();
-
-  const [summary, expenseData] = await Promise.all([
-    getSummaryData(user.id),
-    getExpenseBreakdownData(user.id),
-  ]);
 
   return (
     <main className="min-h-screen bg-[#f7f8fc] px-4 py-6 md:px-6">
@@ -33,11 +27,9 @@ export default async function DashboardPage() {
           </p>
         </section>
 
-        <KpiCards summary={summary} />
-
-        <section className="grid gap-4 lg:grid-cols-1 lg:gap-6">
-          <ExpensePieChart data={expenseData} />
-        </section>
+        <Suspense fallback={<DashboardPageSkeleton />}>
+          <DashboardPageContent userId={user.id} />
+        </Suspense>
       </div>
     </main>
   );

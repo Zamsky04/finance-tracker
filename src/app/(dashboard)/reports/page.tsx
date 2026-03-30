@@ -1,10 +1,7 @@
-// src/app/(dashboard)/reports/page.tsx
-import {
-  getSummaryData,
-  getExpenseBreakdownData,
-} from '@/db/dashboard-queries';
+import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
-import { ReportsClient } from './reports.client';
+import { ReportsPageContent } from './page-content';
+import { ReportsPageSkeleton } from './page-skeleton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,15 +9,9 @@ export const revalidate = 0;
 export default async function ReportsPage() {
   const user = await requireUser();
 
-  const [summary, expenseData] = await Promise.all([
-    getSummaryData(user.id),
-    getExpenseBreakdownData(user.id),
-  ]);
-
   return (
-    <ReportsClient
-      initialSummary={summary}
-      initialExpenseData={expenseData}
-    />
+    <Suspense fallback={<ReportsPageSkeleton />}>
+      <ReportsPageContent userId={user.id} />
+    </Suspense>
   );
 }

@@ -30,7 +30,7 @@ export function ExpensePieChart({ data }: { data: Item[] }) {
         </p>
       </div>
 
-      <div className="h-[320px] min-h-[320px] w-full min-w-0">
+      <div className="h-80 min-h-80 w-full min-w-0">
         {hasData ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
