@@ -1,7 +1,7 @@
 // src/app/(dashboard)/reports/reports.client.tsx
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CashflowLineChart } from '@/components/cashflow-line-chart';
 import { FiltersBar, type ReportFilters } from '@/components/filters-bar';
 import { KpiCards } from '@/components/kpi-cards';
@@ -31,15 +31,21 @@ function today() {
 }
 
 export function ReportsClient({ initialTrendData, initialSummary }: Props) {
+  const initialFilter = useMemo<ReportFilters>(
+    () => ({
+      mode: 'day',
+      baseDate: today(),
+    }),
+    []
+  );
+
+  const initialRange = useMemo(() => resolveDateRange(initialFilter), [initialFilter]);
+
   const [trendData, setTrendData] = useState<CashflowPoint[]>(initialTrendData);
   const [summary, setSummary] = useState<Summary>(initialSummary);
   const [loading, setLoading] = useState(false);
-  const [filterLabel, setFilterLabel] = useState('Hari ini');
-
-  const [currentFilter, setCurrentFilter] = useState<ReportFilters>({
-    mode: 'day',
-    baseDate: today(),
-  });
+  const [filterLabel, setFilterLabel] = useState(initialRange.label);
+  const [currentFilter, setCurrentFilter] = useState<ReportFilters>(initialFilter);
 
   const reloadAll = async (filter = currentFilter) => {
     setLoading(true);
@@ -54,24 +60,33 @@ export function ReportsClient({ initialTrendData, initialSummary }: Props) {
       const query = params.toString() ? `?${params.toString()}` : '';
 
       const [trendRes, summaryRes] = await Promise.all([
-        fetch(`/api/reports/cashflow-trend${query}`, { cache: 'no-store' }),
-        fetch(`/api/reports/summary${query}`, { cache: 'no-store' }),
+        fetch(`/api/reports/cashflow-trend${query}`, {
+          method: 'GET',
+          cache: 'no-store',
+        }),
+        fetch(`/api/reports/summary${query}`, {
+          method: 'GET',
+          cache: 'no-store',
+        }),
       ]);
 
-      const trend = trendRes.ok ? await trendRes.json() : [];
-      const sumData = summaryRes.ok
+      const trendRaw = trendRes.ok ? await trendRes.json() : [];
+      const summaryRaw = summaryRes.ok
         ? await summaryRes.json()
         : { total_income: 0, total_expense: 0, balance: 0 };
 
-      setTrendData(
-        trend.map((item: CashflowPoint & { income: string | number; expense: string | number }) => ({
-          ...item,
-          income: Number(item.income || 0),
-          expense: Number(item.expense || 0),
-        }))
-      );
+      const normalizedTrend: CashflowPoint[] = Array.isArray(trendRaw)
+        ? trendRaw.map(
+            (item: CashflowPoint & { income: string | number; expense: string | number }) => ({
+              ...item,
+              income: Number(item.income || 0),
+              expense: Number(item.expense || 0),
+            })
+          )
+        : [];
 
-      setSummary(sumData);
+      setTrendData(normalizedTrend);
+      setSummary(summaryRaw);
       setFilterLabel(range.label);
     } finally {
       setLoading(false);

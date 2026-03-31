@@ -1,3 +1,4 @@
+// src/components/cashflow-line-chart.tsx
 'use client';
 
 import {
@@ -92,50 +93,56 @@ export function CashflowLineChart({ data }: Props) {
       </div>
 
       <div className="h-[320px] sm:h-[380px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatDateLabel}
-              tick={{ fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={(value) =>
-                new Intl.NumberFormat('id-ID', {
-                  notation: 'compact',
-                  maximumFractionDigits: 1,
-                }).format(value)
-              }
-              tick={{ fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              width={56}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="income"
-              name="Pemasukan"
-              stroke="#22c55e"
-              strokeWidth={3}
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="expense"
-              name="Pengeluaran"
-              stroke="#ef4444"
-              strokeWidth={3}
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {data.length === 0 ? (
+          <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
+            Tidak ada data pada periode ini.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDateLabel}
+                tick={{ fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={(value) =>
+                  new Intl.NumberFormat('id-ID', {
+                    notation: 'compact',
+                    maximumFractionDigits: 1,
+                  }).format(value)
+                }
+                tick={{ fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                width={56}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="income"
+                name="Pemasukan"
+                stroke="#22c55e"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="expense"
+                name="Pengeluaran"
+                stroke="#ef4444"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </section>
   );

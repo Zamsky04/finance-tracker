@@ -1,5 +1,5 @@
 // src/db/dashboard-queries.ts
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, transactions } from '@/db/schema';
 
@@ -25,8 +25,59 @@ export type CashflowTrendData = {
   expense: number;
 };
 
+export type TransactionData = {
+  id: string;
+  type: TxType;
+  title: string;
+  amount: number;
+  note: string | null;
+  transactionAt: number;
+  paymentMethod: PaymentMethod | null;
+  paymentProvider: string | null;
+  imageUrl: string | null;
+  imagePath: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryColor: string | null;
+};
+
+export type DateRangeParams = {
+  from?: string;
+  to?: string;
+};
+
+function toNumber(value: string | number | null | undefined) {
+  if (value == null) return 0;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function toMillis(value?: string) {
+  if (!value) return undefined;
+  const ms = new Date(value).getTime();
+  return Number.isFinite(ms) ? ms : undefined;
+}
+
+function buildTransactionWhere(userId: string, range?: DateRangeParams) {
+  const conditions = [eq(transactions.userId, userId)];
+
+  const fromMs = toMillis(range?.from);
+  const toMs = toMillis(range?.to);
+
+  if (fromMs !== undefined) {
+    conditions.push(gte(transactions.transactionAt, fromMs));
+  }
+
+  if (toMs !== undefined) {
+    conditions.push(lte(transactions.transactionAt, toMs));
+  }
+
+  return and(...conditions);
+}
+
 export async function getCashflowTrendData(
-  userId: string
+  userId: string,
+  range?: DateRangeParams
 ): Promise<CashflowTrendData[]> {
   const rows = await db
     .select({
@@ -35,15 +86,14 @@ export async function getCashflowTrendData(
       transactionAt: transactions.transactionAt,
     })
     .from(transactions)
-    .where(eq(transactions.userId, userId))
+    .where(buildTransactionWhere(userId, range))
     .orderBy(desc(transactions.transactionAt));
 
   const grouped = new Map<string, CashflowTrendData>();
 
   for (const item of rows) {
     const amount = toNumber(item.amount);
-
-    const dateKey = new Date(item.transactionAt).toISOString().slice(0, 10);
+    const dateKey = new Date(Number(item.transactionAt)).toISOString().slice(0, 10);
 
     const existing = grouped.get(dateKey);
 
@@ -67,36 +117,17 @@ export async function getCashflowTrendData(
   );
 }
 
-export type TransactionData = {
-  id: string;
-  type: TxType;
-  title: string;
-  amount: number;
-  note: string | null;
-  transactionAt: number;
-  paymentMethod: PaymentMethod | null;
-  paymentProvider: string | null;
-  imageUrl: string | null;
-  imagePath: string | null;
-  categoryId: string | null;
-  categoryName: string | null;
-  categoryColor: string | null;
-};
-
-function toNumber(value: string | number | null | undefined) {
-  if (value == null) return 0;
-  const num = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(num) ? num : 0;
-}
-
-export async function getSummaryData(userId: string): Promise<SummaryData> {
+export async function getSummaryData(
+  userId: string,
+  range?: DateRangeParams
+): Promise<SummaryData> {
   const rows = await db
     .select({
       type: transactions.type,
       amount: transactions.amount,
     })
     .from(transactions)
-    .where(eq(transactions.userId, userId));
+    .where(buildTransactionWhere(userId, range));
 
   return rows.reduce<SummaryData>(
     (acc, item) => {
@@ -121,8 +152,25 @@ export async function getSummaryData(userId: string): Promise<SummaryData> {
 }
 
 export async function getExpenseBreakdownData(
-  userId: string
+  userId: string,
+  range?: DateRangeParams
 ): Promise<ExpenseBreakdownData[]> {
+  const conditions = [
+    eq(transactions.userId, userId),
+    eq(transactions.type, 'expense' as TxType),
+  ];
+
+  const fromMs = toMillis(range?.from);
+  const toMs = toMillis(range?.to);
+
+  if (fromMs !== undefined) {
+    conditions.push(gte(transactions.transactionAt, fromMs));
+  }
+
+  if (toMs !== undefined) {
+    conditions.push(lte(transactions.transactionAt, toMs));
+  }
+
   const expenseOnly = await db
     .select({
       amount: transactions.amount,
@@ -137,12 +185,7 @@ export async function getExpenseBreakdownData(
         eq(categories.userId, userId)
       )
     )
-    .where(
-      and(
-        eq(transactions.userId, userId),
-        eq(transactions.type, 'expense')
-      )
-    );
+    .where(and(...conditions));
 
   const grouped = new Map<string, ExpenseBreakdownData>();
   let grandTotal = 0;
@@ -172,12 +215,17 @@ export async function getExpenseBreakdownData(
     .map((item) => ({
       ...item,
       percentage:
-        grandTotal === 0 ? 0 : Number(((item.total / grandTotal) * 100).toFixed(2)),
+        grandTotal === 0
+          ? 0
+          : Number(((item.total / grandTotal) * 100).toFixed(2)),
     }))
     .sort((a, b) => b.total - a.total);
 }
 
-export async function getTransactionsData(userId: string): Promise<TransactionData[]> {
+export async function getTransactionsData(
+  userId: string,
+  range?: DateRangeParams
+): Promise<TransactionData[]> {
   const rows = await db
     .select({
       id: transactions.id,
@@ -202,7 +250,7 @@ export async function getTransactionsData(userId: string): Promise<TransactionDa
         eq(categories.userId, userId)
       )
     )
-    .where(eq(transactions.userId, userId))
+    .where(buildTransactionWhere(userId, range))
     .orderBy(desc(transactions.transactionAt), desc(transactions.id));
 
   return rows.map((item) => ({
@@ -211,7 +259,7 @@ export async function getTransactionsData(userId: string): Promise<TransactionDa
     title: item.title,
     amount: toNumber(item.amount),
     note: item.note,
-    transactionAt: item.transactionAt,
+    transactionAt: Number(item.transactionAt),
     paymentMethod: (item.paymentMethod ?? null) as PaymentMethod | null,
     paymentProvider: item.paymentProvider ?? null,
     imageUrl: item.imageUrl,
