@@ -52,7 +52,7 @@ export const paymentProviderMeta: Record<string, PaymentProviderMeta> = {
   btn: { label: 'BTN', logo: '/logo/bank-btn-logo.png' },
   danamon: { label: 'Danamon', logo: '/logo/bank-danamon-logo.svg' },
   bsi: { label: 'BSI', logo: '/logo/bank-bsi-logo.png' },
-  jago: { label: 'Jago', logo: '/logo/bank-jago-logo.png' },
+  jago: { label: 'Jago', logo: '/logo/bank-jago-logo.svg' },
 
   gopay: { label: 'GoPay', logo: '/logo/gopay-logo.png' },
   ovo: { label: 'OVO', logo: '/logo/ovo-logo.png' },
