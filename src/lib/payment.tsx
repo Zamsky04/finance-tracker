@@ -24,6 +24,7 @@ export const bankOptions = [
   { value: 'btn', label: 'BTN' },
   { value: 'danamon', label: 'Danamon' },
   { value: 'bsi', label: 'BSI' },
+  { value: 'jago', label: 'Jago' },
 ] as const;
 
 export const eWalletOptions = [
@@ -51,12 +52,13 @@ export const paymentProviderMeta: Record<string, PaymentProviderMeta> = {
   btn: { label: 'BTN', logo: '/logo/bank-btn-logo.png' },
   danamon: { label: 'Danamon', logo: '/logo/bank-danamon-logo.svg' },
   bsi: { label: 'BSI', logo: '/logo/bank-bsi-logo.png' },
+  jago: { label: 'Jago', logo: '/logo/bank-jago-logo.png' },
 
   gopay: { label: 'GoPay', logo: '/logo/gopay-logo.png' },
   ovo: { label: 'OVO', logo: '/logo/ovo-logo.png' },
   shopeepay: { label: 'ShopeePay', logo: '/logo/shopeepay-logo.png' },
   dana: { label: 'DANA', logo: '/logo/dana-logo.png' },
-  linkaja: { label: 'LinkAja', logo: '/logo/linkaja-logo.png' },
+  linkaja: { label: 'LinkAja', logo: '/logo/linkaja-logo.svg' },
 };
 
 export function getPaymentProviderMeta(provider?: string | null) {
