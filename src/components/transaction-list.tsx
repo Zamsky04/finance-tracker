@@ -28,6 +28,7 @@ export type TransactionItem = {
 
 type Props = {
   items: TransactionItem[];
+  selectedId?: string | null;
   onSelect?: (item: TransactionItem) => void;
 };
 
@@ -66,87 +67,98 @@ function PaymentBadge({
   );
 }
 
-export function TransactionList({ items, onSelect }: Props) {
+export function TransactionList({ items, selectedId, onSelect }: Props) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_8px_40px_-8px_rgba(30,64,175,0.12)]">
-      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/40 px-6 py-5">
-        <h3 className="text-base font-semibold tracking-tight text-slate-900">
-          Daftar Transaksi
-        </h3>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Riwayat pemasukan dan pengeluaran terbaru
-        </p>
-      </div>
-
+    <div className="overflow-hidden rounded-[26px] border border-slate-100 bg-white">
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 px-3 py-14 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
             <ListX className="h-6 w-6 text-slate-400" />
           </div>
-          <p className="text-sm font-medium text-slate-500">Belum ada transaksi</p>
+          <p className="text-sm font-medium text-slate-500">
+            Belum ada transaksi pada periode ini
+          </p>
           <p className="text-xs text-slate-400">
-            Tambahkan transaksi pertamamu di form sebelah kiri.
+            Coba ubah filter untuk melihat data lainnya.
           </p>
         </div>
       ) : (
         <ScrollArea className="h-[520px]">
-          <div className="divide-y divide-slate-50 px-3 py-3">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect?.(item)}
-                className="group w-full rounded-2xl px-3 py-3.5 text-left transition-all duration-150 hover:bg-slate-50 active:scale-[0.99]"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                      item.type === 'income'
-                        ? 'bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100'
-                        : 'bg-rose-50 text-rose-400 group-hover:bg-rose-100'
-                    }`}
-                  >
-                    {item.type === 'income' ? (
-                      <ArrowUpRight className="h-4.5 w-4.5" size={18} />
-                    ) : (
-                      <ArrowDownLeft className="h-4.5 w-4.5" size={18} />
-                    )}
-                  </div>
+          <div className="space-y-2 px-2 py-2">
+            {items.map((item) => {
+              const isActive = item.id === selectedId;
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-800">
-                          {item.title}
-                        </p>
-                        <p className="mt-0.5 truncate text-[11px] text-slate-400">
-                          {item.categoryName || 'Tanpa kategori'}
-                          <span className="mx-1.5 text-slate-300">•</span>
-                          {formatDateTimeID(item.transactionAt)}
-                        </p>
-                      </div>
-
-                      <div
-                        className={`shrink-0 text-right text-sm font-bold tabular-nums ${
-                          item.type === 'income'
-                            ? 'text-emerald-600'
-                            : 'text-rose-500'
-                        }`}
-                      >
-                        {item.type === 'income' ? '+' : '−'} {formatIDR(item.amount)}
-                      </div>
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelect?.(item)}
+                  className={`group w-full rounded-2xl border px-3 py-3.5 text-left transition-all duration-150 active:scale-[0.99] ${
+                    isActive
+                      ? 'border-blue-200 bg-blue-50/70 shadow-[0_8px_24px_-16px_rgba(37,99,235,0.5)]'
+                      : 'border-transparent hover:border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+                        item.type === 'income'
+                          ? isActive
+                            ? 'bg-emerald-100 text-emerald-600'
+                            : 'bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100'
+                          : isActive
+                            ? 'bg-rose-100 text-rose-500'
+                            : 'bg-rose-50 text-rose-400 group-hover:bg-rose-100'
+                      }`}
+                    >
+                      {item.type === 'income' ? (
+                        <ArrowUpRight className="h-4.5 w-4.5" size={18} />
+                      ) : (
+                        <ArrowDownLeft className="h-4.5 w-4.5" size={18} />
+                      )}
                     </div>
 
-                    <div className="mt-2">
-                      <PaymentBadge
-                        method={item.paymentMethod}
-                        provider={item.paymentProvider}
-                      />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-800">
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                            {item.categoryName || 'Tanpa kategori'}
+                            <span className="mx-1.5 text-slate-300">•</span>
+                            {formatDateTimeID(item.transactionAt)}
+                          </p>
+                        </div>
+
+                        <div
+                          className={`shrink-0 text-right text-sm font-bold tabular-nums ${
+                            item.type === 'income'
+                              ? 'text-emerald-600'
+                              : 'text-rose-500'
+                          }`}
+                        >
+                          {item.type === 'income' ? '+' : '−'} {formatIDR(item.amount)}
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <PaymentBadge
+                          method={item.paymentMethod}
+                          provider={item.paymentProvider}
+                        />
+
+                        {isActive && (
+                          <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-semibold text-blue-600">
+                            Dipilih
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </ScrollArea>
       )}

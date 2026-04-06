@@ -1,3 +1,4 @@
+// src/components/transaction-detail-sheet.tsx
 'use client';
 
 import { useState } from 'react';
@@ -82,7 +83,7 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
   return (
     <>
       <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_8px_40px_-8px_rgba(30,64,175,0.12)]">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/40 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-blue-50/50 px-6 py-5">
           <div>
             <h3 className="text-base font-semibold tracking-tight text-slate-900">
               Detail Transaksi
@@ -154,10 +155,16 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
             )}
 
             <div className="px-6 py-5">
-              <div className="mb-4">
-                <p className="text-lg font-semibold text-slate-900">{item.title}</p>
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold text-slate-900">{item.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Informasi lengkap transaksi terpilih
+                  </p>
+                </div>
+
                 <span
-                  className={`mt-1.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                     item.type === 'income'
                       ? 'bg-emerald-50 text-emerald-600'
                       : 'bg-rose-50 text-rose-500'
