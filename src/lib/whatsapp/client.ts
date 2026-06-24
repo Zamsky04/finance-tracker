@@ -4,6 +4,11 @@ export type WhatsappButton = {
   title: string;
 };
 
+type WhatsappMediaInfo = {
+  url: string;
+  mime_type?: string;
+};
+
 function getWhatsappConfig() {
   const version = process.env.WHATSAPP_GRAPH_VERSION || 'v21.0';
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -83,7 +88,7 @@ export async function sendWhatsappButtons({
   });
 }
 
-export async function getWhatsappMediaUrl(mediaId: string) {
+export async function getWhatsappMediaUrl(mediaId: string): Promise<WhatsappMediaInfo> {
   const version = process.env.WHATSAPP_GRAPH_VERSION || 'v21.0';
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
 
@@ -102,12 +107,15 @@ export async function getWhatsappMediaUrl(mediaId: string) {
     throw new Error(`Gagal mengambil URL media WhatsApp: ${res.status} ${detail}`);
   }
 
-  const data = (await res.json()) as { url?: string; mime_type?: string };
+  const data = (await res.json()) as Partial<WhatsappMediaInfo>;
   if (!data.url) {
     throw new Error('URL media WhatsApp tidak tersedia');
   }
 
-  return data;
+  return {
+    url: data.url,
+    mime_type: data.mime_type,
+  };
 }
 
 export async function downloadWhatsappMedia(mediaId: string) {
