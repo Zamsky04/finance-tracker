@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   ReceiptText,
+  MessageCircle,
   UserCircle2,
   Wallet,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ const menus = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/transactions', label: 'Transaksi', icon: ReceiptText },
   { href: '/reports', label: 'Laporan', icon: ChartColumn },
+  { href: '/whatsapp', label: 'WhatsApp', icon: MessageCircle },
 ];
 
 type AppUser = {
@@ -235,7 +237,7 @@ export function AppShell({
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-100 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_-4px_rgba(15,23,42,0.07)] backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-3 gap-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1.5">
           {menus.map((item) => {
             const Icon = item.icon;
             const active =

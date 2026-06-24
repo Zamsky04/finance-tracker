@@ -14,6 +14,7 @@ export async function TransactionsPageContent({ userId }: Props) {
 
   return (
     <TransactionsClient
+      userId={userId}
       initialTransactions={transactions}
       categories={categories}
     />

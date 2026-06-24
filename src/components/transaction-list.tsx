@@ -19,6 +19,7 @@ export type TransactionItem = {
   transactionAt: number;
   imageUrl?: string | null;
   imagePath?: string | null;
+  source?: 'web' | 'whatsapp' | null;
   categoryId?: string | null;
   categoryName?: string | null;
   categoryColor?: string | null;
@@ -148,11 +149,19 @@ export function TransactionList({ items, selectedId, onSelect }: Props) {
                           provider={item.paymentProvider}
                         />
 
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {item.source === 'whatsapp' && (
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600">
+                              WA
+                            </span>
+                          )}
+
                         {isActive && (
                           <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-semibold text-blue-600">
                             Dipilih
                           </span>
                         )}
+                        </div>
                       </div>
                     </div>
                   </div>

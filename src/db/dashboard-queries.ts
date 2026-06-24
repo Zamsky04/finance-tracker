@@ -36,6 +36,7 @@ export type TransactionData = {
   paymentProvider: string | null;
   imageUrl: string | null;
   imagePath: string | null;
+  source: 'web' | 'whatsapp';
   categoryId: string | null;
   categoryName: string | null;
   categoryColor: string | null;
@@ -238,6 +239,7 @@ export async function getTransactionsData(
       paymentProvider: transactions.paymentProvider,
       imageUrl: transactions.imageUrl,
       imagePath: transactions.imagePath,
+      source: transactions.source,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
       categoryColor: categories.color,
@@ -264,6 +266,7 @@ export async function getTransactionsData(
     paymentProvider: item.paymentProvider ?? null,
     imageUrl: item.imageUrl,
     imagePath: item.imagePath,
+    source: item.source ?? 'web',
     categoryId: item.categoryId ? String(item.categoryId) : null,
     categoryName: item.categoryName ?? null,
     categoryColor: item.categoryColor ?? null,

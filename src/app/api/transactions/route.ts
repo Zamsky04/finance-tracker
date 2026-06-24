@@ -44,6 +44,7 @@ export async function GET(req: Request) {
       paymentProvider: transactions.paymentProvider,
       imageUrl: transactions.imageUrl,
       imagePath: transactions.imagePath,
+      source: transactions.source,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
       categoryColor: categories.color,
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
           : parsed.data.paymentProvider || null,
       imageUrl: parsed.data.imageUrl || null,
       imagePath: parsed.data.imagePath || null,
+      source: 'web',
     })
     .returning();
 

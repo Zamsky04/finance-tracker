@@ -13,6 +13,7 @@ import {
   CreditCard,
   X,
   Expand,
+  MessageCircle,
 } from 'lucide-react';
 import type { TransactionItem } from './transaction-list';
 import {
@@ -163,15 +164,23 @@ export function TransactionDetailSheet({ item, onDeleted }: Props) {
                   </p>
                 </div>
 
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    item.type === 'income'
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : 'bg-rose-50 text-rose-500'
-                  }`}
-                >
-                  {item.type === 'income' ? '↑ Pemasukan' : '↓ Pengeluaran'}
-                </span>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {item.source === 'whatsapp' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      WhatsApp
+                    </span>
+                  )}
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      item.type === 'income'
+                        ? 'bg-emerald-50 text-emerald-600'
+                        : 'bg-rose-50 text-rose-500'
+                    }`}
+                  >
+                    {item.type === 'income' ? '↑ Pemasukan' : '↓ Pengeluaran'}
+                  </span>
+                </div>
               </div>
 
               <p
